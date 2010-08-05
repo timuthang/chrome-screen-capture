@@ -1,4 +1,6 @@
-Every code change should go through careful review before getting into the main branch. Follow these steps to make a code change:
+Every code change should go through careful review before getting into the main branch.
+
+Follow these steps to make a code change:
 
   # Branch the code in /trunk into /branches/your-new-branch.
     * svn cp https://chrome-screen-capture.googlecode.com/svn/trunk https://chrome-screen-capture.googlecode.com/svn/branches/your-new-branch
