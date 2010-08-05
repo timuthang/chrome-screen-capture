@@ -44,6 +44,7 @@
   "lossyScreenShot" : {"message" : "有损截图"},
   "losslessScreenShot" : {"message" : "无损截图"},
   "autoSave" : {"message" : "自动截图 - 截图后不进行编辑，直接以页面标题为文件名保存到以下路径。"},
+  "autoSaveSetting": {"message": "自动保存设置："},
   "setSavePath" : {"message" : "浏览..."},
   "openSavePath" : {"message" : "在文件夹中显示"},
   "defaultPath" : {"message": "设置为默认路径"}

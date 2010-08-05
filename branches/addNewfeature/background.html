@@ -192,8 +192,8 @@ var screenshot = {
     if (eval(localStorage.autoSave)) { // auto save picture
       var pluginobj = document.getElementById('pluginobj');
       var data = screenshot.canvas.toDataURL('image/png');
-
       pluginobj.AutoSave(data, screenshot.tab.title);
+      screenshot.sendMessage({msg: 'saveSuccess'}, null);
       return;
     }
     chrome.tabs.create({'url': 'showimage.html'}, function() {});
