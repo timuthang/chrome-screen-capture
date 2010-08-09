@@ -31,10 +31,14 @@
 
 #include <vector>
 #include "save.h"
+#include <io.h>
 
 #ifdef _WINDOWS
 #include <atlenc.h>
 #include "plugin.h"
+#include <ShlObj.h>
+#include <Userenv.h>
+#pragma comment(lib, "Userenv.lib")
 #endif
 
 #ifdef GTK
@@ -46,6 +50,7 @@
 #endif
 
 class CPlugin;
+TCHAR szConfigFileName[MAX_PATH]=L"npCaptureConfig.ini";
 
 static bool SaveFile(const char* fileName, const unsigned char* bytes,
                      int byteLength) {
@@ -92,6 +97,157 @@ static void OnDialogDestroy(GtkObject* object, gpointer userData) {
 #ifdef __APPLE__
 const char* GetSaveFileName();
 #endif
+
+bool GenerateUniqueFileName(char* scrFile,char* destFile) {
+  strcpy(destFile,scrFile);  
+  char* pPostfix = strrchr(scrFile,'.');
+  for (int i=1;i<1000;i++)
+  {
+    if (access(destFile,0)) {
+      return true;
+    } else {
+      if (pPostfix) {
+        strncpy(destFile,scrFile,pPostfix-scrFile);
+        destFile[pPostfix-scrFile]=0;
+        sprintf(destFile,"%s(%d)%s",destFile,i,pPostfix);
+      } else {
+        sprintf(destFile,"%s(%d)",scrFile,i);
+      }
+    }
+  }
+  return false;
+}
+
+bool AutoSave(NPObject* obj, const NPVariant* args, 
+              unsigned int argCount, NPVariant* result) {
+  result->type = NPVariantType_Bool;
+  result->value.boolValue = TRUE;
+
+  if (argCount < 1 || !NPVARIANT_IS_STRING(args[0]))
+    return false;
+
+  char* url = (char*)NPVARIANT_TO_STRING(args[0]).UTF8Characters;
+  if (!url)
+    return false;
+
+  char* title = NULL;
+  if (argCount == 2 && NPVARIANT_IS_STRING(args[1]))
+    title = (char*)NPVARIANT_TO_STRING(args[1]).UTF8Characters;
+
+  char* base64 = strstr(url, "base64,");
+  if (!base64)
+    return false;
+  base64 += 7;
+  int base64size = NPVARIANT_TO_STRING(args[0]).UTF8Length - 7;
+
+#ifdef _WINDOWS
+  TCHAR szFileName[MAX_PATH];
+  char szFile[MAX_PATH]="";
+  char szSaveFile[MAX_PATH];
+  TCHAR szUserDefaultPath[MAX_PATH];
+  DWORD nLen = MAX_PATH;
+  HANDLE hToken;
+  OpenProcessToken(GetCurrentProcess(),TOKEN_QUERY,&hToken);
+  GetUserProfileDirectory(hToken,szUserDefaultPath,&nLen);
+  GetPrivateProfileString(L"Path",L"SavePath",szUserDefaultPath,szFileName,
+                         MAX_PATH,szConfigFileName);
+
+  if (!PathIsDirectory(szFileName))
+    wcscpy(szFileName,szUserDefaultPath);
+
+  TCHAR szTitle[MAX_PATH];
+  std::wstring szInvalidWord = L"\\/:*?\"<>|";
+
+  MultiByteToWideChar(CP_UTF8,0,title,-1,szTitle,MAX_PATH);
+  nLen = wcslen(szTitle);
+  for(int i=0;i<nLen;i++) {
+    if (szInvalidWord.find(szTitle[i])!= std::wstring::npos)
+      szTitle[i] = ' ';
+  }
+  wsprintf(szFileName,L"%s\\%s.png",szFileName,szTitle);
+  WideCharToMultiByte(CP_ACP,0,szFileName,-1,szFile,MAX_PATH,0,0);
+
+  if (GenerateUniqueFileName(szFile,szSaveFile)) {
+    int byteLength = Base64DecodeGetRequiredLength(base64size);
+    BYTE* bytes = new BYTE[byteLength];
+    Base64Decode(base64, base64size, bytes, &byteLength);
+    if (!SaveFile(szSaveFile, bytes, byteLength)) {
+      result->value.boolValue = FALSE;
+    }
+  }
+#endif
+
+  return true;
+}
+
+int WINAPI BrowserCallBack(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData) {
+  switch (uMsg) {
+  case BFFM_INITIALIZED:
+    SendMessage(hwnd,BFFM_SETSELECTION,TRUE,lpData);
+    break;
+  }
+  return 0;
+}
+
+bool SetSavePath(NPObject* obj, const NPVariant* args, 
+                 uint32_t argCount, NPVariant* result) {
+  TCHAR szDisplayName[MAX_PATH];
+  HANDLE hToken;
+  TCHAR szSavePath[MAX_PATH];
+  TCHAR szUserDefaultPath[MAX_PATH];
+  DWORD nLen = MAX_PATH;
+
+  TCHAR szFileName[MAX_PATH];
+  GetModuleFileName(GetModuleHandle(L"npcapture.dll"),szFileName,MAX_PATH);
+  std::wstring str = szFileName;
+  int nPos = str.rfind('\\');
+  if (nPos != -1) {
+    str.erase(nPos+1,str.length());
+    str.append(L"npCaptureConfig.ini");
+    wcscpy(szConfigFileName,str.c_str());
+  }
+
+  OpenProcessToken(GetCurrentProcess(),TOKEN_QUERY,&hToken);
+  GetUserProfileDirectory(hToken,szUserDefaultPath,&nLen);
+  GetPrivateProfileString(L"Path",L"SavePath",szUserDefaultPath,szSavePath,
+                          MAX_PATH,szConfigFileName);
+
+  BROWSEINFO info={0};
+  info.hwndOwner = (HWND)((ScriptablePluginObject*)obj)->hWnd;
+  info.lpszTitle = L"select default picture path";
+  info.pszDisplayName = szDisplayName;
+  info.lpfn = BrowserCallBack;
+  info.ulFlags = BIF_RETURNONLYFSDIRS;
+  info.lParam = (LPARAM)szSavePath;
+  BOOL bRet = SHGetPathFromIDList(SHBrowseForFolder(&info),szDisplayName);
+  LPSTR p = (LPSTR)npnfuncs->memalloc(MAX_PATH);
+  if (bRet) {
+    WritePrivateProfileString(L"Path",L"SavePath",szDisplayName,szConfigFileName);
+    WideCharToMultiByte(CP_UTF8,0,szDisplayName,-1,p,MAX_PATH,0,0);
+    STRINGZ_TO_NPVARIANT(p,*result);
+  } else {
+    WideCharToMultiByte(CP_UTF8,0,szSavePath,-1,p,MAX_PATH,0,0);
+    STRINGZ_TO_NPVARIANT(p,*result);
+  }
+
+  return true;
+}
+
+bool OpenSavePath(NPObject* obj, const NPVariant* args, 
+                  unsigned int argCount, NPVariant* result) {
+  TCHAR szSavePath[MAX_PATH];
+  TCHAR szUserDefaultPath[MAX_PATH];
+  DWORD nLen = MAX_PATH;
+  HANDLE hToken;
+  OpenProcessToken(GetCurrentProcess(),TOKEN_QUERY,&hToken);
+  GetUserProfileDirectory(hToken,szUserDefaultPath,&nLen);
+  GetPrivateProfileString(L"Path",L"SavePath",szUserDefaultPath,szSavePath,
+                          MAX_PATH,szConfigFileName);
+
+  ShellExecute(NULL,L"open",szSavePath,NULL,NULL,SW_SHOWNORMAL);
+  return true;
+}
+
 
 bool SaveScreenshot(NPObject* obj, const NPVariant* args,
                     uint32_t argCount, NPVariant* result) {
