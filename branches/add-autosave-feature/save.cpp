@@ -37,8 +37,6 @@
 #include <atlenc.h>
 #include "plugin.h"
 #include <ShlObj.h>
-#include <Userenv.h>
-#pragma comment(lib, "Userenv.lib")
 #endif
 
 #ifdef GTK
@@ -50,7 +48,6 @@
 #endif
 
 class CPlugin;
-TCHAR szConfigFileName[MAX_PATH]=L"npCaptureConfig.ini";
 
 static bool SaveFile(const char* fileName, const unsigned char* bytes,
                      int byteLength) {
@@ -131,8 +128,10 @@ bool AutoSave(NPObject* obj, const NPVariant* args,
     return false;
 
   char* title = NULL;
-  if (argCount == 2 && NPVARIANT_IS_STRING(args[1]))
+  if (argCount > 2 && NPVARIANT_IS_STRING(args[1]))
     title = (char*)NPVARIANT_TO_STRING(args[1]).UTF8Characters;
+  else
+    return false;
 
   char* base64 = strstr(url, "base64,");
   if (!base64)
@@ -140,22 +139,19 @@ bool AutoSave(NPObject* obj, const NPVariant* args,
   base64 += 7;
   int base64size = NPVARIANT_TO_STRING(args[0]).UTF8Length - 7;
 
+  const char* path = NPVARIANT_TO_STRING(args[2]).UTF8Characters;
+
 #ifdef _WINDOWS
   TCHAR szFileName[MAX_PATH];
-  char szFile[MAX_PATH]="";
-  char szSaveFile[MAX_PATH];
-  TCHAR szUserDefaultPath[MAX_PATH];
-  DWORD nLen = MAX_PATH;
-  HANDLE hToken;
-  OpenProcessToken(GetCurrentProcess(),TOKEN_QUERY,&hToken);
-  GetUserProfileDirectory(hToken,szUserDefaultPath,&nLen);
-  GetPrivateProfileString(L"Path",L"SavePath",szUserDefaultPath,szFileName,
-                         MAX_PATH,szConfigFileName);
+  MultiByteToWideChar(CP_UTF8,0,path,-1,szFileName,MAX_PATH);
 
   if (!PathIsDirectory(szFileName))
-    wcscpy(szFileName,szUserDefaultPath);
+    return false;
 
-  TCHAR szTitle[MAX_PATH];
+  TCHAR szTitle[MAX_PATH]=L"";
+  char szFile[MAX_PATH]="";
+  char szSaveFile[MAX_PATH]="";
+  int nLen = 0;
   std::wstring szInvalidWord = L"\\/:*?\"<>|";
 
   MultiByteToWideChar(CP_UTF8,0,title,-1,szTitle,MAX_PATH);
@@ -191,26 +187,16 @@ int WINAPI BrowserCallBack(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData) {
 
 bool SetSavePath(NPObject* obj, const NPVariant* args, 
                  uint32_t argCount, NPVariant* result) {
-  TCHAR szDisplayName[MAX_PATH];
-  HANDLE hToken;
-  TCHAR szSavePath[MAX_PATH];
-  TCHAR szUserDefaultPath[MAX_PATH];
-  DWORD nLen = MAX_PATH;
+#ifdef _WINDOWS
+  TCHAR szDisplayName[MAX_PATH]={0};
+  TCHAR szSavePath[MAX_PATH]={0};
 
-  TCHAR szFileName[MAX_PATH];
-  GetModuleFileName(GetModuleHandle(L"npcapture.dll"),szFileName,MAX_PATH);
-  std::wstring str = szFileName;
-  int nPos = str.rfind('\\');
-  if (nPos != -1) {
-    str.erase(nPos+1,str.length());
-    str.append(L"npCaptureConfig.ini");
-    wcscpy(szConfigFileName,str.c_str());
-  }
+  if (argCount<1 && !NPVARIANT_IS_STRING(args[0]))
+    return false;
 
-  OpenProcessToken(GetCurrentProcess(),TOKEN_QUERY,&hToken);
-  GetUserProfileDirectory(hToken,szUserDefaultPath,&nLen);
-  GetPrivateProfileString(L"Path",L"SavePath",szUserDefaultPath,szSavePath,
-                          MAX_PATH,szConfigFileName);
+  const char* path = NPVARIANT_TO_STRING(args[0]).UTF8Characters;
+  if (path)
+    MultiByteToWideChar(CP_UTF8,0,path,-1,szSavePath,MAX_PATH);
 
   BROWSEINFO info={0};
   info.hwndOwner = (HWND)((ScriptablePluginObject*)obj)->hWnd;
@@ -222,29 +208,32 @@ bool SetSavePath(NPObject* obj, const NPVariant* args,
   BOOL bRet = SHGetPathFromIDList(SHBrowseForFolder(&info),szDisplayName);
   LPSTR p = (LPSTR)npnfuncs->memalloc(MAX_PATH);
   if (bRet) {
-    WritePrivateProfileString(L"Path",L"SavePath",szDisplayName,szConfigFileName);
     WideCharToMultiByte(CP_UTF8,0,szDisplayName,-1,p,MAX_PATH,0,0);
     STRINGZ_TO_NPVARIANT(p,*result);
   } else {
     WideCharToMultiByte(CP_UTF8,0,szSavePath,-1,p,MAX_PATH,0,0);
     STRINGZ_TO_NPVARIANT(p,*result);
   }
+#endif
 
   return true;
 }
 
 bool OpenSavePath(NPObject* obj, const NPVariant* args, 
                   unsigned int argCount, NPVariant* result) {
-  TCHAR szSavePath[MAX_PATH];
-  TCHAR szUserDefaultPath[MAX_PATH];
-  DWORD nLen = MAX_PATH;
-  HANDLE hToken;
-  OpenProcessToken(GetCurrentProcess(),TOKEN_QUERY,&hToken);
-  GetUserProfileDirectory(hToken,szUserDefaultPath,&nLen);
-  GetPrivateProfileString(L"Path",L"SavePath",szUserDefaultPath,szSavePath,
-                          MAX_PATH,szConfigFileName);
+#ifdef _WINDOWS
+  TCHAR szSavePath[MAX_PATH]=L"";
+
+  if (argCount < 1 || !NPVARIANT_IS_STRING(args[0]))
+    return false;
+
+  const char* path = NPVARIANT_TO_STRING(args[0]).UTF8Characters;
+
+  MultiByteToWideChar(CP_UTF8,0,path,-1,szSavePath,MAX_PATH);
 
   ShellExecute(NULL,L"open",szSavePath,NULL,NULL,SW_SHOWNORMAL);
+#endif
+
   return true;
 }
 
