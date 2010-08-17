@@ -22,7 +22,7 @@
    # Commit changed files in working copy into /branches/your-new-branch
       * cd /path/to/chrome-screen-capture-branch
       * svn commit
-   # Request code review and repeat last 4 steps for several times.
+   # [http://code.google.com/p/chrome-screen-capture/issues/entry?show=review&former=sourcelist Request code review] and repeat last 4 steps for several times.
    # Print commit logs in /branches/your-new-branch since branched
       * cd /path/to/chrome-screen-capture-branch
       * svn log --stop-on-copy (record the last printed revision, referred as *X* later)
