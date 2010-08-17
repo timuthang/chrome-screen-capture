@@ -1,0 +1,37 @@
+===Before we use branch===
+   # Checkout /trunk into a working copy
+      * svn checkout https://chrome-screen-capture.googlecode.com/svn/trunk chrome-screen-capture
+   # Make code change
+   # Update working copy to the head revision
+      * cd /path/to/chrome-screen-capture
+      * svn update
+   # Resolve conflicts if there is any
+   # Commit changed files in working copy into /trunk
+      * cd /path/to/chrome-screen-capture
+      * svn commit
+===After we use branch===
+   # Branch code in /trunk into /branches/your-new-branch
+      * svn cp https://chrome-screen-capture.googlecode.com/svn/trunk/ https://chrome-screen-capture.googlecode.com/svn/branches/your-new-branch
+   # Checkout /branches/your-new-branch into a working copy
+      * svn checkout https://chrome-screen-capture.googlecode.com/svn/branches/your-new-branch chrome-screen-capture-branch
+   # Make code change
+   # Update working copy to the head revision
+      * cd /path/to/chrome-screen-capture-branch
+      * svn update
+   # Resolve conflicts if there is any
+   # Commit changed files in working copy into /branches/your-new-branch
+      * cd /path/to/chrome-screen-capture-branch
+      * svn commit
+   # Request code review and report last 3 steps for several times.
+   # Print commit logs in /branches/your-new-branch since branched
+      * cd /path/to/chrome-screen-capture-branch
+      * svn log --stop-on-copy (record the last printed revision, referred as *X* later)
+   # Checkout /trunk into a working copy
+      * svn checkout https://chrome-screen-capture.googlecode.com/svn/trunk chrome-screen-capture
+   # Merge /branches/your-new-branch back into /trunk
+      * cd /path/to/chrome-screen-capture
+      * svn merge -r *X*-1:head https://chrome-screen-capture.googlecode.com/svn/branches/your-new-branch
+   # Resolve conflicts if there is any
+   # Commit changed files in working copy into /trunk
+      * cd /path/to/chrome-screen-capture
+      * svn commit
