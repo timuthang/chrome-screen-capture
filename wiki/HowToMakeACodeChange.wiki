@@ -1,8 +1,11 @@
 ===Guideline===
-Every code change should go through careful review before getting into the main branch.
+   * Every code change should go through careful review before getting into the main branch.
 
 ===Steps===
    * Branch the code in /trunk into /branches/your-new-branch.
    * Make changes in /branches/your-new-branch.
    * [http://code.google.com/p/chrome-screen-capture/issues/entry?show=review&former=sourcelist Request code review], and modify your code in /branches/your-new-branch based on your discussion with your code reviewer.
    * After you get a positive score from your code reviewer, merge /branches/your-new-branch back into /trunk.
+
+===Commands===
+   * See [http://code.google.com/p/chrome-screen-capture/wiki/BasicSVNCommands Basic SVN Commands].
