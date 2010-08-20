@@ -211,36 +211,17 @@ var screenshot = {
       var open;
       if (pluginobj.AutoSave(data, screenshot.tab.title,
           localStorage.savePath)) {
-        status = 'saveSuccess';
-        open = chrome.i18n.getMessage('openSavePath');
-      } else {
-        status = 'saveFail';
-        open = false;
-      }
-      screenshot.showNotifications(status);
-      screenshot.sendMessage({msg: 'auto_save_done',
-          status: chrome.i18n.getMessage(status), open: open},
-          screenshot.onResponseVisibleSize);
+        screenshot.showNotifications();
+      } 
       return;
     }
     chrome.tabs.create({'url': 'showimage.html'}, function() {});
   },
 
-  showNotifications: function(tip) {
-    var message = chrome.i18n.getMessage(tip);
-    var image = chrome.extension.getURL('icon_48.png');
-    var time = /(..)(:..)/(Date());              // The prettyprinted time.
-    var hour = time[1] % 12 || 12;               // The prettyprinted hour.
-    var period = time[1] < 12 ? 'a.m.' : 'p.m.'; // The period of the day.
-    var notification = webkitNotifications.createNotification(
-      image,                      // The image.
-      hour + time[2] + ' ' + period, // The title.
-      message      // The body.
-    );
+  showNotifications: function() {
     var htmlNotification = webkitNotifications.createHTMLNotification(
       'notification.html'  // html url - can be relative
     );
-    notification.show();
     htmlNotification.show();
   },
 

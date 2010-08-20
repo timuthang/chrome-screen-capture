@@ -9,21 +9,34 @@
       font-size:13px;
       font-family: arial, Verdana;
     }
+    #tip a{
+      text-decoration: underline;
+      color: #2A5DB0;
+    }
   </style>
 </head>
 <body>
 <div id="tip"></div>
    <script type="text/javascript">
       function init() {
-        document.getElementById('tip').innerHTML =
-            chrome.i18n.getMessage('saveSuccess');
+        var bg = chrome.extension.getBackgroundPage();
+        var tipDiv = document.getElementById('tip');
+        var aElement = document.createElement('a');
+        aElement.innerText = chrome.i18n.getMessage('openSavePath');
+        aElement.href = 'javascript:void(0)';
+        aElement.addEventListener('click', function() {
+          bg.screenshot.openSavePath();
+        }, false);
+        var message = chrome.i18n.getMessage('saveSuccess');
+        tipDiv.innerText = message;
+        tipDiv.appendChild(aElement);
         closeWindow();
       }
 
       function closeWindow() {
         window.setTimeout(function() {
           window.close();
-        }, 3000);
+        }, 10000);
       }
       init();
    </script>
