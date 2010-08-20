@@ -1,0 +1,32 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+    "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <title></title>
+  <style type="text/css">
+    #tip {
+      margin:10px;
+      font-size:13px;
+      font-family: arial, Verdana;
+    }
+  </style>
+</head>
+<body>
+<div id="tip"></div>
+   <script type="text/javascript">
+      function init() {
+        document.getElementById('tip').innerHTML =
+            chrome.i18n.getMessage('saveSuccess');
+        closeWindow();
+      }
+
+      function closeWindow() {
+        window.setTimeout(function() {
+          window.close();
+        }, 3000);
+      }
+      init();
+   </script>
+
+</body>
+</html>
