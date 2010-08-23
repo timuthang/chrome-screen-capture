@@ -217,6 +217,7 @@ var screenshot = {
         screenshot.capturedStatus = false;
       }
       screenshot.showNotifications();
+      chrome.extension.sendRequest({msg: 'webpageCapturedDone'});
       return;
     }
     chrome.tabs.create({'url': 'showimage.html'}, function() {});
