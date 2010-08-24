@@ -1,5 +1,5 @@
 = Version 2.0.0 =
-
+== English Version ==
 It's easy to use this extension to capture visible content of a tab, a region of a web page, or the whole page as a PNG image.
 
 You can also edit your captured image before saving it as a PNG image. Highlighting, redacting and adding text are supported.
@@ -19,6 +19,7 @@ Due to a bug in Chrome 5, capturing lossless screenshots on Windows will have di
 
 By installing this extension, you agree to the Terms of Service at https://chrome.google.com/extensions/intl/en/gallery_tos.html
 
+== 中文版 ==
 该扩展可以轻松截取当前标签页的可见区域，当前网页的指定区域，或是整张网页的页面。
 
 截图后，可以利用图片编辑工具编辑图片，然后将编辑后的图片保存为PNG格式的图片文件。目前我们提供高亮工具，涂改工具和文字添加工具。
@@ -39,7 +40,7 @@ By installing this extension, you agree to the Terms of Service at https://chrom
 安装该扩展即表示您同意以下服务条款：https://chrome.google.com/extensions/intl/zh-CN/gallery_tos.html
 
 = Version 0.1.0 =
-
+== English Version ==
 It's easy to use this extension to capture visible content of a tab, a region of a web page, or the whole page as a PNG image.
 
 You can also edit your captured image before saving it as a PNG image. Highlighting, redacting and adding text are supported.
@@ -56,6 +57,7 @@ Known bug 2: If you are using Chrome stable or beta version in Windows and choos
 
 By installing this extension, you agree to the Terms of Service at https://chrome.google.com/extensions/intl/en/gallery_tos.html
 
+== 中文版 ==
 该扩展可以轻松截取当前标签页的可见区域，当前网页的指定区域，或是整张网页的页面。
 
 截图后，可以利用图片编辑工具编辑图片，然后将编辑后的图片保存为PNG格式的图片文件。目前我们提供高亮工具，涂改工具和文字添加工具。
