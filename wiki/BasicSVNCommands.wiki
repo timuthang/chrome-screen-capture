@@ -2,10 +2,9 @@
    # Checkout /trunk into a working copy
       * svn checkout https://chrome-screen-capture.googlecode.com/svn/trunk chrome-screen-capture
    # Make code change
-   # Update working copy to the head revision
+   # Update working copy to the head revision, and resolve conflicts if there is any
       * cd /path/to/chrome-screen-capture
       * svn update
-   # Resolve conflicts if there is any
    # Commit changed files in working copy into /trunk
       * cd /path/to/chrome-screen-capture
       * svn commit
