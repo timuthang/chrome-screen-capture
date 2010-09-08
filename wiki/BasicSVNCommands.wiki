@@ -20,16 +20,15 @@
    # Commit changed files in working copy into /branches/your-new-branch
       * `cd /path/to/chrome-screen-capture-branch`
       * `svn commit`
-   # [http://code.google.com/p/chrome-screen-capture/issues/entry?show=review&former=sourcelist Request code review] and repeat last 4 steps for several times.
+   # [http://code.google.com/p/chrome-screen-capture/issues/entry?show=review&former=sourcelist Request code review]
    # Print commit logs in /branches/your-new-branch since branched
       * `cd /path/to/chrome-screen-capture-branch`
-      * `svn log --stop-on-copy` (record the last printed revision, referred as *X* later)
+      * `svn log --stop-on-copy` (record the last printed revision, referred as `X` later)
    # Checkout /trunk into a working copy
       * `svn checkout https://chrome-screen-capture.googlecode.com/svn/trunk chrome-screen-capture`
-   # Merge /branches/your-new-branch back into /trunk
+   # Merge /branches/your-new-branch back into /trunk and resolve conflicts if there is any
       * `cd /path/to/chrome-screen-capture`
-      * `svn merge -r *X*-1:head https://chrome-screen-capture.googlecode.com/svn/branches/your-new-branch`
-   # Resolve conflicts if there is any
+      * `svn merge -r X-1:head https://chrome-screen-capture.googlecode.com/svn/branches/your-new-branch`
    # Commit changed files in working copy into /trunk
       * `cd /path/to/chrome-screen-capture`
       * `svn commit`
