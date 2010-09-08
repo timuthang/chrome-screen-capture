@@ -1,0 +1,20 @@
+=== Install gcl ===
+gcl is a code review tool for subversion. It's a part of Chromium's [http://dev.chromium.org/developers/how-tos/depottools depot_tools]. You can follow the install instructions [http://dev.chromium.org/developers/how-tos/install-gclient here].
+
+=== Use gcl to send code reviews ===
+  # Checkout /trunk into a working copy
+    * `svn checkout https://chrome-screen-capture.googlecode.com/svn/trunk chrome-screen-capture`
+  # Make code change and generate a changelist
+    * `gcl change`
+    * Record the changelist id, referred as A1B2 below.
+  # Upload the changelist to codereview.appspot.com
+    * `gcl upload A1B2 -s codereview.appspot.com -r reviewer@gmail.com -cc extension-code-commits@googlegroups.com -m "changelist description" --send_mail`
+    * record the issue id, referred as 1234567 below.
+    * -r, -cc, -m and --send_mail params are optional. You can set them on codereview.appspot.com/1234567.
+  # Make more code change and update the changelist if necessary
+    * `gcl change A1B2`
+  # Upload the changelist again to the same issue in codereview.appspot.com
+    * `gcl upload A1B2 -s codereview.appspot.com -i 1234567 --send_mail`
+    * Again, --send_mail is optional. You can do that on codereview.appspot.com/1234567.
+  # Commit the changelist
+    * `gcl commit A1B2`
