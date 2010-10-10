@@ -2,7 +2,7 @@
 === 1. Checkout ===
 Checkout the repository into a new directory:
 {{{
-$ svn checkout https://chrome-screen-capture.googlecode.com/svn/trunk chrome-screen-capture
+$ svn checkout https://chrome-screen-capture.googlecode.com/svn/trunk chrome-screen-capture --username your-name
 }}}
 === 2. Develop ===
 After creating a new file, you can mark it to be added:
