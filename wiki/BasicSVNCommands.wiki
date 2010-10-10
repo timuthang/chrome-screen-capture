@@ -22,7 +22,7 @@ To revert a modified file, an added file or a deleted file:
 $ svn revert images/b.png
 }}}
 === 3. Update ===
-Update to the HEAD version:
+Update to the HEAD revision:
 {{{
 $ svn update
 }}}
