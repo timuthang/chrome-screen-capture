@@ -7,8 +7,30 @@
 <head>
 </head>
 <body>
-<embed id="pluginobj" type="application/x-screencapture">
+<embed id="pluginObj" type="application/x-screencapture">
 <script>
+var plugin = {
+  pluginObj: document.getElementById('pluginObj'),
+  autoSave: function(data, title, path) {
+    return this.pluginObj.AutoSave(data, title, path);
+  },
+  openSavePath : function(path) {
+    this.pluginObj.OpenSavePath(path);
+  },
+  getDefaultSavePath: function() {
+    return this.pluginObj.GetDefaultSavePath();
+  },
+  setSavePath: function(savePath, callback, title) {
+    this.pluginObj.SetSavePath(savePath, callback, title);
+  },
+  saveScreenshot: function(data, tabTitle, path, callback, imageTitle) {
+    this.pluginObj.SaveScreenshot(data, tabTitle, path, callback, imageTitle);
+  },
+  saveToClipboard: function(data) {
+    return this.pluginObj.SaveToClipboard(data);
+  }
+}
+
 var screenshot = {
   tab: 0,
   canvas: document.createElement("canvas"),
@@ -197,10 +219,9 @@ var screenshot = {
   postImage: function() {
     // auto save picture
     if (eval(localStorage.autoSave)) {
-      var pluginobj = document.getElementById('pluginobj');
       var data = screenshot.canvas.toDataURL('image/png');
       chrome.tabs.getSelected(null, function(tab) {
-        if (pluginobj.AutoSave(data, tab.title, localStorage.savePath)) {
+        if (plugin.autoSave(data, tab.title, localStorage.savePath)) {
           screenshot.captureStatus = true;
         } else {
           screenshot.captureStatus = false;
@@ -225,14 +246,8 @@ var screenshot = {
     return navigator.userAgent.toLowerCase().indexOf(operationSystem) > -1;
   },
 
-  openSavePath: function() {
-    var pluginobj = document.getElementById('pluginobj');
-    pluginobj.OpenSavePath(localStorage.savePath);
-  },
-
   init: function() {
-    var pluginobj = document.getElementById('pluginobj');
-    var savePath = pluginobj.GetDefaultSavePath();
+    var savePath = plugin.getDefaultSavePath();
     localStorage.savePath = localStorage.savePath ?
         localStorage.savePath : savePath;
     localStorage.screenshootQuality = localStorage.screenshootQuality || 'png';
