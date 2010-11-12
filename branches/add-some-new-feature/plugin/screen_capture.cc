@@ -325,10 +325,15 @@ bool SaveToClipboard(ScriptablePluginObject* obj, const NPVariant* args,
     GtkClipboard* clipboard = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
     if (clipboard == NULL)
       return false;
-    GtkWidget *image;
-    image = gtk_image_new_from_file (temp_path);
-    GdkPixbuf* buff = gtk_image_get_pixbuf(GTK_IMAGE(image));
-    gtk_clipboard_set_image(clipboard, buff);
+    GError *err = NULL;
+    GdkPixbuf* buff = gdk_pixbuf_new_from_file(temp_path, &err);
+    if (buff != NULL) {
+      gtk_clipboard_set_image(clipboard, buff);
+      gdk_pixbuf_unref(buff);
+    } else {
+      g_error_free(err);
+      return false;
+    }
   } else {
     return false;
   }
@@ -491,6 +496,7 @@ bool OpenSavePath(ScriptablePluginObject* obj, const NPVariant* args,
 
 bool SaveScreenshot(ScriptablePluginObject* obj, const NPVariant* args,
                     uint32_t argCount, NPVariant* result) {
+
   if (argCount < 5 || !NPVARIANT_IS_STRING(args[0]) ||
       !NPVARIANT_IS_STRING(args[1]) || !NPVARIANT_IS_STRING(args[2]) ||
       !NPVARIANT_IS_OBJECT(args[3]) || !NPVARIANT_IS_STRING(args[4]))
