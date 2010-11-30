@@ -51,7 +51,7 @@
   }
   .toolBar ul li {
     cursor: pointer;
-    margin-right: 3px;
+    margin-right: 8px;
     float: left;
     background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#FEFEFE), to(#CDDCF0));
     border: 1px solid #788390;
@@ -80,6 +80,10 @@
   }
   .toolbar li:hover .tool {
     display: block;
+  }
+  .toolbar li img {
+    position: relative;
+    top: 2px;
   }
   .layer {
     font-size:12px;
@@ -276,7 +280,7 @@
      </div>
     </div>
     </li>
-    <li id="btnLine" onclick="photoshop.toDo('line', localStorage.lineType)">
+    <li id="btnLine">
       <canvas id="lineIconCav" width="14" height="14" ></canvas>
       <span id="lineText"></span>
       <div class="tool">
@@ -293,13 +297,16 @@
   <div id="tip"></div>
   <div class="toolbar" id="okBtn" style="position:fixed; right:30px; top:0px;">
    <ul>
-    <li id="btnCopy" onclick="photoshop.copy()">
-      <span id="tCopy"></span>
-    </li>
     <li id="btnSave" onclick="photoshop.save()">
+      <img src="images/icon_save.png" alt="">
       <span id="tSave"></span>
     </li>
+    <li id="btnCopy" onclick="photoshop.copy()">
+      <img src="images/icon_copy.png" alt="">
+      <span id="tCopy"></span>
+    </li>
     <li id="btnClose" onclick="photoshop.closeCurrentTab()">
+      <img src="images/icon_close.png" alt="">
       <span id="tClose">Close</span>
     </li>
    </ul>
@@ -426,10 +433,18 @@
       $(photoshop.layerId).innerHTML = '<br/>';
       $(photoshop.layerId).setAttribute("onblur",
           "photoshop.setTextToArray('" + photoshop.layerId + "')");
-      var id = photoshop.layerId;
-      $(photoshop.layerId).addEventListener('click', function() {
-        $(id).style.border = '1px dotted #333333';
+      var layer = $(photoshop.layerId);
+      layer.addEventListener('click', function() {
+        this.style.border = '1px dotted #333333';
       }, true);
+      layer.addEventListener('mouseout', function() {
+        if (!photoshop.dragFlag) {
+          this.style.borderWidth = 0;
+        }
+      }, false);
+      layer.addEventListener('mousemove', function() {
+        this.style.border = '1px dotted #333333';
+      }, false);
     },
 
     setTextToArray: function(id) {
@@ -954,7 +969,6 @@
     },
 
     initTools: function() {
-      photoshop.i18nReplace('tip', 'edit_tip');
       photoshop.i18nReplace('tHighlight', 'highlight');
       photoshop.i18nReplace('tRedact', 'redact');
       photoshop.i18nReplace('redactText', 'solid_black');
@@ -1002,6 +1016,7 @@
 
       $('btnLine').addEventListener('click', function() {
         photoshop.toDo(this, localStorage.lineType);
+        photoshop.setLineColorBoxStyle();
       }, false);
 
 

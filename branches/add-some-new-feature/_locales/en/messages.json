@@ -40,6 +40,6 @@
   "save_and_close": {"message": "Save & Close"},
   "save_success": {"message": "Screenshot saved."},
   "save_fail": {"message": "Failed to save the screenshot."},
-  "tip_copy_succeed": {"message": "Copy success."},
-  "tip_copy_failed": {"message": "Copy failed."}
+  "tip_copy_succeed": {"message": "Screenshot copied."},
+  "tip_copy_failed": {"message": "Failed to copy the screenshot."}
 }

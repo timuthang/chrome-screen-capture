@@ -40,6 +40,6 @@
   "save_and_close": {"message": "保存并关闭"},
   "save_success": {"message": "截图保存成功。"},
   "save_fail": {"message": "截图保存失败。"},
-  "tip_copy_succeed": {"message": "拷贝成功。"},
-  "tip_copy_failed": {"message": "拷贝失败。"}
+  "tip_copy_succeed": {"message": "截图拷贝成功。"},
+  "tip_copy_failed": {"message": "截图拷贝失败。"}
 }
