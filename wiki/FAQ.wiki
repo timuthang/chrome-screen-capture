@@ -27,7 +27,7 @@ Q: 为什么这个扩展不能捕捉到Flash视频？
 A: 这个和Flash对象设置的属性有关，如果Flash没有设置wmode属性，则默认是window，需要设置Flash的属性wmode='opaque'才可以实现截屏。
 
 === Can you add a feature to share/upload the screenshot to Facebook or Twitter? ===
-We can't share the screenshot directly because we capture it on your local machine, and to share it, you need to upload it first. We haven't found the upload API of Facebook or Twitter. If you have any clue, please email to extension-feedbacks@googlegroups.com.
+We can't share the screenshot directly because we capture it on your local machine. Before we can share it, we need to upload it first. We haven't found the upload API of Facebook or Twitter. If you have any clue, please email to extension-feedbacks@googlegroups.com.
 
 Q: 我能不能将截图进行分享/上传到Facebook、Twitter等网站？
 
