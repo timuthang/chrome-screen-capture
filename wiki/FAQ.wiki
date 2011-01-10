@@ -3,7 +3,7 @@ It's because this extension uses an NPAPI plugin to save your screenshot to your
 
 Q: 为什么这个扩展需要访问计算机的所有数据？
 
-A: 因为这个扩展需要将图片保存到本机的硬盘中，所以需要使用插件来实现这个功能。所有使用插件的扩展安装时都会显示这样的提示。
+A: 因为这个扩展使用NPAPI插件来实现将图片保存到本地硬盘的功能。所有使用插件的扩展安装时都会显示这样的提示。
 
 === Why can't I sync this extension access multiple computers? ===
 This extension contains an NPAPI plugin, so it can't be synced.
@@ -17,14 +17,14 @@ This extension contains an NPAPI plugin, which is unsupported on Chrome OS.
 
 Q: 为什么我不能在Chrome OS上安装这个扩展？
 
-A: 因为这个扩展使用了NPAPI插件而Chrome OS不支持NPAPI插件。
+A: 因为这个扩展使用了NPAPI插件，Chrome OS不能安装使用NPAPI插件的扩展。
 
 === Why can't I capture region or whole page on new tabs, extension gallery pages or local HTML pages? ===
 To capture region or whole page, we need to run functions in content script, but content script can't be ejected in these pages.
 
 Q: 在某些页面中如“新标签页”、“扩展Gallery页面”、“本地HTML页面”，截图方式只有“可视区域截图”一种。
 
-A: 因为在这些页面中，无法插入Content Script，所以无法进行其他两种截图。
+A: 因为在这些页面中无法插入Content Script，所以无法进行其他两种截图。
 
 === Why can't this extension capture Flash? ===
 A Flash object has a property named “wmode”. The default value of wmode is “window”. To capture a Flash, its wmode property need to be “opaque”.
@@ -32,10 +32,3 @@ A Flash object has a property named “wmode”. The default value of wmode is �
 Q: 为什么这个扩展不能捕捉到Flash视频？
 
 A: 这个和Flash对象设置的属性有关，如果Flash没有设置wmode属性，则默认是window，需要设置Flash的属性wmode='opaque'才可以实现截屏。
-
-=== Can you add a feature to share/upload the screenshot to Facebook or Twitter? ===
-We can't share the screenshot directly because we capture it on your local machine. Before we can share it, we need to upload it first. We haven't found the upload API of Facebook or Twitter. If you have any clue, please email to extension-feedbacks@googlegroups.com.
-
-Q: 我能不能将截图进行分享/上传到Facebook、Twitter等网站？
-
-A: 我们的扩展无法分享截图，因为截图是本地文件，要分享就要先上传。Facebook和Twitter的上传API我们还没有找到，如果你知道该怎么做，请发信到extension-feedbacks@googlegroups.com告诉我们。
