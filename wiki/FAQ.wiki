@@ -12,13 +12,6 @@ Q: 我使用多台计算机，为什么其他扩展可以同步，而这个扩�
 
 A: 因为谷歌浏览器的限制，所有包含插件的扩展程序目前都不能进行同步。
 
-=== Why can't I install this extension on Chrome OS? ===
-This extension contains an NPAPI plugin, which is unsupported on Chrome OS.
-
-Q: 为什么我不能在Chrome OS上安装这个扩展？
-
-A: 因为这个扩展使用了NPAPI插件，Chrome OS不能安装使用NPAPI插件的扩展。
-
 === Why can't I capture region or whole page on new tabs, extension gallery pages or local HTML pages? ===
 To capture region or whole page, we need to run functions in content script, but content script can't be ejected in these pages.
 
@@ -32,3 +25,10 @@ A Flash object has a property named “wmode”. The default value of wmode is �
 Q: 为什么这个扩展不能捕捉到Flash视频？
 
 A: 这个和Flash对象设置的属性有关，如果Flash没有设置wmode属性，则默认是window，需要设置Flash的属性wmode='opaque'才可以实现截屏。
+
+=== Why can't I install this extension on Chrome OS? ===
+This extension contains an NPAPI plugin, which is unsupported on Chrome OS.
+
+Q: 为什么我不能在Chrome OS上安装这个扩展？
+
+A: 因为这个扩展使用了NPAPI插件，Chrome OS不能安装使用NPAPI插件的扩展。
