@@ -13,7 +13,7 @@ Q: 我使用多台计算机，为什么其他扩展可以同步，而这个扩�
 A: 因为谷歌浏览器的限制，所有包含插件的扩展程序目前都不能进行同步。
 
 === Why can't I capture region or whole page on new tabs, extension gallery pages or local HTML pages? ===
-To capture region or whole page, we need to run functions in content script, but content script can't be ejected in these pages.
+To capture region or whole page, we need to run functions in content script, but content script can't be injected in these pages.
 
 Q: 在某些页面中如“新标签页”、“扩展Gallery页面”、“本地HTML页面”，截图方式只有“可视区域截图”一种。
 
