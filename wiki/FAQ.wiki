@@ -6,11 +6,11 @@ Q: 为什么这个扩展需要访问计算机的所有数据？
 A: 因为这个扩展使用NPAPI插件来实现将图片保存到本地硬盘的功能。所有使用插件的扩展安装时都会显示这样的提示。
 
 === Why can't I sync this extension access multiple computers? ===
-This extension contains an NPAPI plugin, so it can't be synced.
+Based on the security concern, Chrome doesn't sync any extension which contains an NPAPI plugin.
 
-Q: 我使用多台计算机，为什么其他扩展可以同步，而这个扩展不可以同步？
+Q: 为什么我不能在多台计算机之间同步这个扩展？
 
-A: 因为谷歌浏览器的限制，所有包含插件的扩展程序目前都不能进行同步。
+A: 出于对安全性的考虑，谷歌浏览器不同步任何包含插件的扩展程序。
 
 === Why can't I capture region or whole page on new tabs, extension gallery pages or local HTML pages? ===
 Because we can't inject content script in these pages, we can't capture region or whole page on them. If you want to capture an extension gallery page, you can start Chrome with the --allow-scripting-gallery flag.
