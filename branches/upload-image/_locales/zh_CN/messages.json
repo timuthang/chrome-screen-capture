@@ -25,6 +25,7 @@
   "edit_tip": {"message": "以下是您的截图，您可以利用左边的工具进行编辑，然后点击“保存” 按钮。"},
   "copy": {"message": "拷贝"},
   "save": {"message": "保存"},
+  "upload": {"message": "上传"},
   "close": {"message": "关闭"},
   "save_image": {"message": "保存图片"},
   "options": {"message": "网页截图选项"},
@@ -43,5 +44,14 @@
   "save_success": {"message": "截图保存成功。"},
   "save_fail": {"message": "截图保存失败。"},
   "tip_copy_succeed": {"message": "截图拷贝成功。"},
-  "tip_copy_failed": {"message": "截图拷贝失败。"}
+  "tip_copy_failed": {"message": "截图拷贝失败。"},
+  "upload_file": {"message": "确定"},
+  "cancel_upload": {"message": "取消"},
+  "sina": {"message": "新浪微薄"},
+  "facebook": {"message": "facebook"},
+  "select_prompt": {"message": "请您选择上传的位置："},
+  "upload_succeed": {"message": "上传成功"},
+  "upload_failed": {"message": "上传失败"},
+  "uploading_image": {"message": "正在上传："},
+  "no_select_upload_position": {"message": "请选择上传位置"}
 }

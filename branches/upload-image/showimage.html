@@ -1,4 +1,4 @@
-<!--
+﻿<!--
  * Copyright (c) 2009 The Chromium Authors. All rights reserved.  Use of this
  * source code is governed by a BSD-style license that can be found in the
  * LICENSE file.
@@ -234,6 +234,32 @@
     color: #ffffff;
     background: #ff8080;
   }
+  
+  #selectuploadposition {
+  border: 1px solid #ccc;
+  width: 300px;
+  height: 200px;
+  padding:5px;
+  position: absolute;
+  z-index: 1000;
+  left:40%;
+  top:25%;
+  display: none;
+  -webkit-box-shadow: #cccccc 0 0 7px 1px;
+  background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#d0dff2), to(#f5f9fc));
+}
+.selectcontent
+{
+  background-color: White;
+  width:300px;
+  height:168px;
+}
+button {
+  cursor: pointer;
+}
+input {
+ cursor: pointer; 
+}
 </style>
 <script type="text/javascript" src="editer.js"></script>
 </head>
@@ -301,6 +327,10 @@
       <img src="images/icon_save.png" alt="">
       <span id="tSave"></span>
     </li>
+        <li id="btnUpload">
+      <img src="images/highlight.gif" alt="">
+      <span id="tUpload"></span>
+    </li>
     <li id="btnCopy" onclick="photoshop.copy()">
       <img src="images/icon_copy.png" alt="">
       <span id="tCopy"></span>
@@ -320,9 +350,222 @@
   <div class="layer" id="layer0"></div>
   </div>
   </div>
+  <div id='selectuploadposition'>
+    <div class="selectcontent" >
+    <div id="selectPrompt" style="padding:30px 0 0 30px; "></div>
+      <div style="padding: 5px 0 0 30px;">
+      <div style="padding: 5px 5px;"><input  id="selectSina" type= "radio"><span id="sina"></span></div>
+      <div style="padding: 5px 5px;"><input id="selectFacebook" type= "radio"><span id="facebook"></span></div>
+      </div>
+    </div>
+    <div style="float: right; margin: 5px 15px 0 0;"><button id="uploadFile"></button><button id="cancelUpload"></button></div>
+    
+  </div>
+  <iframe name="myiframe" width='0' height="0" id="myiframe"></iframe>
   <img id="pic" src="#" style="display:none">
   <embed id="pluginobj" width="0" height="0" type="application/x-screencapture">
   <script>
+  
+  function $(id) {
+    return document.getElementById(id);
+  }
+  
+  var uploadImage = {
+   access_token : '',
+    init: function() {
+      photoshop.i18nReplace('uploadFile', 'upload_file');
+      photoshop.i18nReplace('cancelUpload', 'cancel_upload');
+      photoshop.i18nReplace('sina', 'sina');
+      photoshop.i18nReplace('facebook', 'facebook');
+      photoshop.i18nReplace('tUpload', 'upload');
+      photoshop.i18nReplace('selectPrompt', 'select_prompt');
+      uploadImage.addEventListener();
+    },
+    
+  addEventListener: function() {
+    $('selectSina').addEventListener('click', function(){
+      $('selectFacebook').checked = false;
+    }, false);
+    $('selectFacebook').addEventListener('click', function(){
+     $('selectSina').checked = false;
+    }, false);
+    $('uploadFile').addEventListener('click', function(){
+      if($('selectSina').checked) {
+        uploadImage.upload('sina',
+          'http://api.t.sina.com.cn/statuses/upload.xml', '1350884563');
+      } else if ($('selectFacebook').checked) {
+        uploadImage.uploadImageToFacebook();
+        uploadImage.createUploadProgress();
+      } else {
+        photoshop.showTip('tip_failed', 'no_select_upload_position');
+        return;
+      }
+      $('selectuploadposition').style.display = 'none';    
+    }, false);
+    $('cancelUpload').addEventListener('click', function(){
+      $('selectuploadposition').style.display = 'none';
+    }, false);
+    $('btnUpload').addEventListener('click', function() {
+      $('selectuploadposition').style.display = 'block';
+    }, false);
+  },
+  
+  getImageDataURL: function () {
+    photoshop.draw();
+    return $('canvas').toDataURL('image/png');
+  },
+   
+  getAppKey: function(app) {
+    switch(app) {
+      case 'sina' :
+        return {AppKey:'1350884563', AppSecret: 'dd130d4873f31445a51cbb176f9630fe'};
+        break ;
+      case 'facebook' :
+        return {AppID : '182294598468746', APIKey: '68ad5de371f63449b5f7b7e55f51cbcb',
+            AppSecret: 'f7c253436bd281260073d4e9527a7457'};
+        break;
+    }
+  },
+   
+  upload: function(app, uploadUrl, token) {
+    var dataUrl = uploadImage.getImageDataURL();
+    var imgdataIndex = dataUrl.indexOf('data:image/png;base64,');
+    if (imgdataIndex != 0) {
+      return;
+    }
+    var imagedata = atob(dataUrl.substr(imgdataIndex+22));  
+    var xhr = new XMLHttpRequest();
+    XMLHttpRequest.prototype.sendAsBinary = function(text) {
+      var data = new ArrayBuffer(text.length);
+      var ui8a = new Uint8Array(data);
+      for (var i = 0; i < text.length; i++) {     
+        ui8a[i] = (text.charCodeAt(i) & 0xff);
+      }
+      var bb = new BlobBuilder();
+      bb.append(data);
+      var blob = bb.getBlob();
+      this.send(blob);
+    }
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState == 4) {
+        if(app == 'sina') {
+          if (xhr.status == 200) {  
+            photoshop.showTip('tip_succeed', 'upload_succeed');
+          }  else if (xhr.status == 403) {
+            chrome.tabs.create({url: 'http://t.sina.com.cn/login.php'});
+          } else {
+          $('selectuploadposition').style.display = 'none';
+            photoshop.showTip('tip_failed', 'upload_failed');
+          }     
+        } else if (app == 'facebook') {
+          if (xhr.status == 200 && xhr.responseXML != null) {
+            var rootname = xhr.responseXML.documentElement.nodeName;
+            if (rootname == 'error_response') {
+              photoshop.showTip('tip_failed', 'upload_failed');
+            } else if (rootname == 'photos_upload_response') {
+              photoshop.showTip('tip_succeed', 'upload_succeed');
+            } else {
+              photoshop.showTip('tip_failed', 'upload_failed');
+            }
+          }       
+        }
+        document.body.removeChild($('uploadProgress'));                
+      } 
+    }
+    
+    xhr.upload.addEventListener('progress', function (e) {  
+      if (e.lengthComputable) {  
+        var percentage = Math.round((e.loaded * 100) / e.total);
+         var uploadProgress = $('uploadProgress'); 
+         uploadProgress.innerText = chrome.i18n.getMessage('uploading_image') + percentage + "%";
+      }  
+    }, false);  
+    
+    xhr.open('POST', uploadUrl);
+    var boundary = 'GOOGLESCREENCAPTURE';
+    xhr.setRequestHeader('Content-Type', 
+        'multipart/form-data, boundary='+boundary);
+    var body = '';
+    body += "--" + boundary + "\r\n";
+    if(app == 'sina') {
+      body += 'Content-Disposition: form-data; name=\"status\"\r\n\r\n';
+      body += encodeURIComponent("您好！这是测试图片")+"\r\n";
+      body += '--' + boundary + '\r\n';
+      body += 'Content-Disposition: form-data; name=\"source\"\r\n\r\n';
+      body += token+'\r\n';
+      body += '--' + boundary + '\r\n';
+      body += 'Content-Disposition: form-data; name=\"pic\"; filename=\"test.png\"\r\n';
+    } else {
+      body += 'Content-Disposition: form-data; name=\"access_token\"\r\n\r\n';
+      body += token+'\r\n';
+      body += '--' + boundary + '\r\n';
+      body += 'Content-Disposition: form-data; name=\"aid\"\r\n\r\n';
+      body += 'Screen Capture Upload Album\r\n';
+      body += '--' + boundary + '\r\n';
+      body += 'Content-Disposition: form-data; filename=\"test.png\"\r\n';
+    }
+    body += 'Content-type: image/png\r\n\r\n';
+    body += imagedata + '\r\n';
+    body += '--' + boundary + '--\r\n';
+    xhr.sendAsBinary(body);     
+  },
+  
+  createUploadProgress: function () {
+    var div = document.createElement('DIV');
+    div.className = 'tip_succeed';
+    div.id = 'uploadProgress';
+    document.body.appendChild(div);
+    div.style.left = (document.body.clientWidth - div.clientWidth) / 2 + 'px';
+  },
+
+  uploadImageToFacebook: function() {
+    if(''==uploadImage.access_token) {
+      var url =' https://graph.facebook.com/oauth/authorize?'+
+          'client_id=182294598468746&redirect_uri=http://www'+
+          '.facebook.com/connect/login_success.html&scope='+
+          'user_photos,user_videos,publish_stream';
+      chrome.tabs.create({url: url}, function(tab) {
+        chrome.tabs.onUpdated.addListener(function(tabId, changeinfo, tab){
+          if (changeinfo.url) {
+            var allowUrlIndex = changeinfo.
+                url.indexOf('http://www.facebook.com/connect/login_success.html?code=');
+            var denyUrlIndex = changeinfo.url.indexOf
+                ('http://www.facebook.com/connect/login_success.html?error_reason=user_denied');
+            if (allowUrlIndex != -1) {
+              var codeURL = changeinfo.url.substr(changeinfo.url.indexOf('='), changeinfo.url.length);
+              var url = 'https://graph.facebook.com/oauth/access_token?'+
+                  'client_id=182294598468746&redirect_uri=http://www.fac'+
+                  'ebook.com/connect/login_success.html&client_secret=f7'+
+                  'c253436bd281260073d4e9527a7457&code' + codeURL;
+              uploadImage.requestFacebook(url);
+            } else if (denyUrlIndex != -1) {   
+              photoshop.showTip('tip_failed', 'upload_failed');       
+            }
+          }
+        });   
+      });
+    } else {
+      uploadImage.upload('facebook', 
+          'https://api.facebook.com/method/photos.upload?caption=你好，这是测试图片', 
+          uploadImage.access_token);
+    }  
+  },
+    
+  requestFacebook: function(url) {
+    var xmlHttp=new XMLHttpRequest();
+    xmlHttp.onreadystatechange=function() {
+      if(xmlHttp.readyState==4) {
+        uploadImage.access_token = xmlHttp.responseText.split('=')[1].split('&')[0];
+        uploadImage.upload('facebook', 
+            'https://api.facebook.com/method/photos.upload?caption=你好，这是测试图片', 
+            uploadImage.access_token);
+      }
+    }
+    xmlHttp.open("GET",url,false);
+    xmlHttp.send(null);
+  }
+  }
+ 
   var bg = chrome.extension.getBackgroundPage();
   var canvas = new Canvas();
   var photoshop = {
@@ -372,7 +615,7 @@
       }
       photoshop.initTools();
       photoshop.initCanvas();
-
+      uploadImage.init();
       photoshop.tabTitle = bg.screenshot.tab.title;
       var showBoxHeight = function() {
         $('showBox').style.height = window.innerHeight - photoshop.offsetY - 1;
@@ -812,9 +1055,7 @@
     },
 
     save: function() {
-      photoshop.draw();
-      var dataUrl = $('canvas').toDataURL('image/png');
-
+      var dataUrl = uploadImage.getImageDataURL();
       // Here we use the plugin object in showimage.html instead of the plugin object
       // in background page, so that the SaveScreenshot dialog will be a modal dialog.
       var pluginobj = document.getElementById('pluginobj');
@@ -829,8 +1070,7 @@
     },
 
     copy: function() {
-      photoshop.draw();
-      var data = $('canvas').toDataURL('image/png');
+      var data = uploadImage.getImageDataURL();
       var copyFlag = bg.plugin.saveToClipboard(data);
       if (copyFlag) {
         photoshop.showTip('tip_succeed', 'tip_copy_succeed');
@@ -840,11 +1080,10 @@
       photoshop.finish();
 
     },
-
+   
     drawLineOnMaskCanvas: function(startX, startY, endX, endY, type, layerId) {
       var ctx = $('mask-canvas').getContext('2d');
       ctx.clearRect(0, 0, $('mask-canvas').width, $('mask-canvas').height);
-
       if (type == 'drawEnd') {
         var offset = 20;
         var width = Math.abs(endX - photoshop.startX) > 0 ?
