@@ -328,7 +328,7 @@ input {
       <span id="tSave"></span>
     </li>
         <li id="btnUpload">
-      <img src="images/highlight.gif" alt="">
+      <img src="images/upload.png" alt="">
       <span id="tUpload"></span>
     </li>
     <li id="btnCopy" onclick="photoshop.copy()">
@@ -538,6 +538,12 @@ input {
                   'ebook.com/connect/login_success.html&client_secret=f7'+
                   'c253436bd281260073d4e9527a7457&code' + codeURL;
               uploadImage.requestFacebook(url);
+              var executeCode = 'document.body.innerHTML = "' +
+                  "<div style='position:absolute; top:20%; left: 20%;'>"+
+                  "<table><tr><td><img src='"+chrome.extension.getURL('images/facebook.gif')+"'></td><td >" +
+                  "<a style='color: #547ABC; font-size: 30px;' href='http://www.fac" +
+                  "ebook.com'>http://www.facebook.com</a></td></tr></table></div>" +'"';
+              chrome.tabs.executeScript(tabId, {code: executeCode}); 
             } else if (denyUrlIndex != -1) {   
               photoshop.showTip('tip_failed', 'upload_failed');       
             }
