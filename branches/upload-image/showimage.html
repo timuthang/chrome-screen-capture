@@ -390,12 +390,12 @@ input {
      $('selectSina').checked = false;
     }, false);
     $('uploadFile').addEventListener('click', function(){
+      uploadImage.createUploadProgress();
       if($('selectSina').checked) {
         uploadImage.upload('sina',
           'http://api.t.sina.com.cn/statuses/upload.xml', '1350884563');
       } else if ($('selectFacebook').checked) {
         uploadImage.uploadImageToFacebook();
-        uploadImage.createUploadProgress();
       } else {
         photoshop.showTip('tip_failed', 'no_select_upload_position');
         return;
