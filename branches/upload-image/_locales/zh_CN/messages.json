@@ -47,7 +47,7 @@
   "tip_copy_failed": {"message": "截图拷贝失败。"},
   "upload_file": {"message": "确定"},
   "cancel_upload": {"message": "取消"},
-  "sina": {"message": "新浪微薄"},
+  "sina": {"message": "新浪微博"},
   "facebook": {"message": "facebook"},
   "select_prompt": {"message": "请您选择上传的位置："},
   "upload_succeed": {"message": "上传成功"},

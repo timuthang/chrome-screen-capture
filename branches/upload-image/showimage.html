@@ -374,12 +374,17 @@ input {
   
   chrome.extension.onRequest.addListener(function(request, sender, response) {
       if (request.message == 'continueUpload') {
-        uploadImage.upload('sina', 'http://api.t.sina.com.cn/statuses/upload.xml');
+        localStorage['oauth_verifier'] = request.value;
+        if (!uploadImage.is_get_verifier) {
+          uploadImage.is_get_verifier = true;
+          uploadImage.getAccessToken();
+        }
       }
     });
   
   var uploadImage = {
     access_token : '',
+    is_get_verifier: false,
     init: function() {
       photoshop.i18nReplace('uploadFile', 'upload_file');
       photoshop.i18nReplace('cancelUpload', 'cancel_upload');
@@ -389,7 +394,61 @@ input {
       photoshop.i18nReplace('selectPrompt', 'select_prompt');
       uploadImage.addEventListener();
     },
-
+    
+    checkTabStatus: function(tabId) {
+      chrome.tabs.get(tabId, function(tab) {
+        if (tab.status == 'complete' && !uploadImage.is_get_verifier) {
+          chrome.tabs.executeScript(tabId, {file: 'get_oauth_verifier.js'});
+          setTimeout('uploadImage.checkTabStatus(' + tabId + ')', 2000);
+        } else {
+          setTimeout('uploadImage.checkTabStatus(' + tabId + ')', 2000);
+        }
+      });
+    },
+    
+    authorizeCallback: function(win) {
+      uploadImage.is_get_verifier = false;
+      setTimeout('uploadImage.checkTabStatus(' + win.tabs[0].id + ')', 1000);
+    },
+    
+    getAccessToken: function() {
+      var message = {
+        action: 'http://api.t.sina.com.cn/oauth/access_token',
+        method: 'POST',
+        parameters:{
+          'oauth_consumer_key': '1350884563',
+          'oauth_token': localStorage['oauth_token'],
+          'oauth_token_secret': localStorage['oauth_token_secret'],
+          'oauth_signature_method': 'HMAC-SHA1',
+          'oauth_verifier': localStorage['oauth_verifier'],
+          'oauth_version': '1.0'
+        }
+      };
+      var accessor = {
+        consumerKey: '1350884563',
+        consumerSecret: 'dd130d4873f31445a51cbb176f9630fe',
+        tokenSecret: localStorage['oauth_token_secret']
+      };
+      OAuth.setTimestampAndNonce(message);
+      OAuth.SignatureMethod.sign(message, accessor);
+      var xhr = new XMLHttpRequest();
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4) {
+          if (xhr.status == 200) {
+            var params = xhr.responseText.split('&');
+            localStorage['access_token'] = params[0].split('=')[1];
+            localStorage['oauth_token_secret'] = params[1].split('=')[1];
+            uploadImage.upload('sina', 'http://api.t.sina.com.cn/statuses/upload.xml');
+          } else {
+          }
+        }
+      }
+      xhr.open('POST', 'http://api.t.sina.com.cn/oauth/access_token');
+      var header = OAuth.getAuthorizationHeader("", message.parameters);
+      xhr.setRequestHeader('Authorization', header);
+      xhr.send();
+    },
+    
     authorizeSina: function(tabId) {
       var message = {
         action: 'http://api.t.sina.com.cn/oauth/request_token',
@@ -415,9 +474,10 @@ input {
             var retvalue = xhr.responseText.split('&');
             localStorage['oauth_token'] = retvalue[0].split('=')[1];
             localStorage['oauth_token_secret'] = retvalue[1].split('=')[1];
+            localStorage['upload_tabId'] = tabId;
             url += retvalue[0];
-            url += "&oauth_callback=" + chrome.extension.getURL('sina_authorize.html') + '?tabId=' + tabId;
-            chrome.windows.create({url: url, type:'popup'});
+            url += "&oauth_callback=oob";// + chrome.extension.getURL('sina_authorize.html') + '?tabId=' + tabId;
+            chrome.windows.create({url: url, type:'popup'}, uploadImage.authorizeCallback);
           } else {
             alert(decodeURIComponent(xhr.responseText));
           }
@@ -475,7 +535,7 @@ input {
   },
    
   upload: function(app, uploadUrl, token) {
-    if (app == 'sina' && !localStorage['oauth_token']) {
+    if (app == 'sina' && !localStorage['access_token']) {
       chrome.tabs.getCurrent(function (tab) {
         uploadImage.authorizeSina(tab.id);
       });      
@@ -548,7 +608,7 @@ input {
         method: 'POST',
         parameters:{
           'oauth_consumer_key': '1350884563',
-          'oauth_token': localStorage['oauth_token'],
+          'oauth_token': localStorage['access_token'],
           'oauth_signature_method': 'HMAC-SHA1',
           'status': encodeURIComponent(caption),
           'oauth_version': '1.0'
