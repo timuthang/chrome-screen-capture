@@ -564,7 +564,8 @@ input {
       if (xhr.readyState == 4) {
         if(app == 'sina') {
           if (xhr.status == 200) {  
-            photoshop.showTip('tip_succeed', 'upload_succeed');
+            var picNode = xhr.responseXML.documentElement.getElementsByTagName('original_pic')[0];
+            photoshop.showLink('tip_succeed', 'upload_succeed', picNode.textContent);
           }  else if (xhr.status == 403) {
             chrome.tabs.create({url: 'http://t.sina.com.cn/login.php'});
           } else {
@@ -577,7 +578,8 @@ input {
             if (rootname == 'error_response') {
               photoshop.showTip('tip_failed', 'upload_failed');
             } else if (rootname == 'photos_upload_response') {
-              photoshop.showTip('tip_succeed', 'upload_succeed');
+              var picNode = xhr.responseXML.documentElement.getElementsByTagName('src_big')[0];
+              photoshop.showLink('tip_succeed', 'upload_succeed', picNode.textContent);
             } else {
               photoshop.showTip('tip_failed', 'upload_failed');
             }
@@ -1495,11 +1497,27 @@ input {
       var div = document.createElement('DIV');
       div.className = className;
       div.innerText = chrome.i18n.getMessage(message);
+      if (arguments.length == 3)
+      div.innerHTML = div.innerText + '<a target="_blank" href="' + arguments[2] +'"/>' + 
+        arguments[2] + '</a>';
       document.body.appendChild(div);
       div.style.left = (document.body.clientWidth - div.clientWidth) / 2 + 'px';
       window.setTimeout(function() {
         document.body.removeChild(div);
       }, 2000);
+    },
+    
+    showLink: function(className, message, link) {
+      var div = document.createElement('DIV');
+      div.className = className;
+      document.body.appendChild(div);
+      div.style.width = (document.body.clientWidth) / 3 + 'px';
+      div.style.left = (document.body.clientWidth - div.clientWidth) / 2 + 'px';
+      div.innerHTML = chrome.i18n.getMessage(message) + ' <a target="_blank" href="' + link +'"/>' + 
+        link + '</a>';
+      window.setTimeout(function() {
+        document.body.removeChild(div);
+      }, 10000);
     }
   };
 
