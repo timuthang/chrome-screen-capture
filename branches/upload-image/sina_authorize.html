@@ -1,0 +1,57 @@
+﻿<html>
+  <head>
+    <script type="text/javascript" src="sha1.js"></script>
+    <script type="text/javascript" src="oauth.js"></script>
+  </head>
+  <body onload='getAccessToken()'>
+    <script language='javascript'>
+      function getAccessToken() {
+        var parameters = document.URL.split('?')[1];
+        var tabId = parameters.split('&')[0].split('=')[1];
+        var oauth_verifier = document.URL.split('oauth_verifier=')[1];
+        localStorage['oauth_verifier'] = oauth_verifier;
+        var message = {
+          action: 'http://api.t.sina.com.cn/oauth/access_token',
+          method: 'POST',
+          parameters:{
+            'oauth_consumer_key': '1350884563',
+            'oauth_token': localStorage['oauth_token'],
+            'oauth_token_secret': localStorage['oauth_token_secret'],
+            'oauth_signature_method': 'HMAC-SHA1',
+            'oauth_verifier': oauth_verifier,
+            'oauth_version': '1.0'
+          }
+        }
+        var accessor = {
+          consumerKey: '1350884563',
+          consumerSecret: 'dd130d4873f31445a51cbb176f9630fe',
+          tokenSecret: localStorage['oauth_token_secret']
+        };
+        OAuth.setTimestampAndNonce(message);
+        OAuth.SignatureMethod.sign(message, accessor);
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function() {
+          if (xhr.readyState == 4) {
+            if (xhr.status == 200) {
+              document.getElementById('prompt').visibility = 'true';
+              var params = xhr.responseText.split('&');
+              localStorage['oauth_token'] = params[0].split('=')[1];
+              localStorage['oauth_token_secret'] = params[1].split('=')[1];
+              chrome.tabs.sendRequest(parseInt(tabId), {message:'continueUpload'});
+            } else {
+              document.writeln("Error!");
+              document.writeln(decodeURIComponent(xhr.responseText));
+            }
+          }
+        }
+        xhr.open('POST', 'http://api.t.sina.com.cn/oauth/access_token');
+        var header = OAuth.getAuthorizationHeader("", message.parameters);
+        xhr.setRequestHeader('Authorization', header);
+        xhr.send();
+      }
+      
+    </script>
+    <div id='prompt' style='visibility:false'>Sucess! <a href='http://t.sina.com.cn' >Sina 微博</a></div>
+    <br/>
+  </body>
+</html>

@@ -262,6 +262,8 @@ input {
 }
 </style>
 <script type="text/javascript" src="editer.js"></script>
+<script type="text/javascript" src="sha1.js"></script>
+<script type="text/javascript" src="oauth.js"></script>
 </head>
 <body>
   <div id="header">
@@ -370,8 +372,14 @@ input {
     return document.getElementById(id);
   }
   
+  chrome.extension.onRequest.addListener(function(request, sender, response) {
+      if (request.message == 'continueUpload') {
+        uploadImage.upload('sina', 'http://api.t.sina.com.cn/statuses/upload.xml');
+      }
+    });
+  
   var uploadImage = {
-   access_token : '',
+    access_token : '',
     init: function() {
       photoshop.i18nReplace('uploadFile', 'upload_file');
       photoshop.i18nReplace('cancelUpload', 'cancel_upload');
@@ -380,6 +388,45 @@ input {
       photoshop.i18nReplace('tUpload', 'upload');
       photoshop.i18nReplace('selectPrompt', 'select_prompt');
       uploadImage.addEventListener();
+    },
+
+    authorizeSina: function(tabId) {
+      var message = {
+        action: 'http://api.t.sina.com.cn/oauth/request_token',
+        method: 'POST',
+        parameters:{
+          'oauth_callback': document.URL,
+          'oauth_consumer_key': '1350884563',
+          'oauth_signature_method': 'HMAC-SHA1',
+          'oauth_version': '1.0'
+        }
+      }
+      var accessor = {
+        consumerKey: '1350884563',
+        consumerSecret: 'dd130d4873f31445a51cbb176f9630fe'
+      };
+      OAuth.setTimestampAndNonce(message);
+      OAuth.SignatureMethod.sign(message, accessor);
+      var xhr = new XMLHttpRequest();
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4) {
+          if (xhr.status == 200) {
+            var url = 'http://api.t.sina.com.cn/oauth/authorize?';
+            var retvalue = xhr.responseText.split('&');
+            localStorage['oauth_token'] = retvalue[0].split('=')[1];
+            localStorage['oauth_token_secret'] = retvalue[1].split('=')[1];
+            url += retvalue[0];
+            url += "&oauth_callback=" + chrome.extension.getURL('sina_authorize.html') + '?tabId=' + tabId;
+            chrome.windows.create({url: url, type:'popup'});
+          } else {
+            alert(decodeURIComponent(xhr.responseText));
+          }
+        }
+      }
+      xhr.open('POST', 'http://api.t.sina.com.cn/oauth/request_token');
+      var header = OAuth.getAuthorizationHeader("", message.parameters);
+      xhr.setRequestHeader('Authorization', header);
+      xhr.send();
     },
     
   addEventListener: function() {
@@ -428,6 +475,13 @@ input {
   },
    
   upload: function(app, uploadUrl, token) {
+    if (app == 'sina' && !localStorage['oauth_token']) {
+      chrome.tabs.getCurrent(function (tab) {
+        uploadImage.authorizeSina(tab.id);
+      });      
+      return;
+    }
+      
     var dataUrl = uploadImage.getImageDataURL();
     var imgdataIndex = dataUrl.indexOf('data:image/png;base64,');
     if (imgdataIndex != 0) {
@@ -488,11 +542,30 @@ input {
     var body = '';
     body += "--" + boundary + "\r\n";
     if(app == 'sina') {
+      var caption = '你好' + parseInt(Math.random()*100000000000) + "随机数";
+      var message = {
+        action: uploadUrl,
+        method: 'POST',
+        parameters:{
+          'oauth_consumer_key': '1350884563',
+          'oauth_token': localStorage['oauth_token'],
+          'oauth_signature_method': 'HMAC-SHA1',
+          'status': encodeURIComponent(caption),
+          'oauth_version': '1.0'
+        }
+      }
+      var accessor = {
+        consumerSecret: 'dd130d4873f31445a51cbb176f9630fe',
+        tokenSecret: localStorage['oauth_token_secret']
+      };
+      OAuth.setTimestampAndNonce(message);
+      OAuth.SignatureMethod.sign(message, accessor);
+      
+      var header = OAuth.getAuthorizationHeader("", message.parameters);
+      xhr.setRequestHeader('Authorization', header);
+            
       body += 'Content-Disposition: form-data; name=\"status\"\r\n\r\n';
-      body += encodeURIComponent("您好！这是测试图片")+"\r\n";
-      body += '--' + boundary + '\r\n';
-      body += 'Content-Disposition: form-data; name=\"source\"\r\n\r\n';
-      body += token+'\r\n';
+      body += encodeURIComponent(caption)+"\r\n";
       body += '--' + boundary + '\r\n';
       body += 'Content-Disposition: form-data; name=\"pic\"; filename=\"test.png\"\r\n';
     } else {
