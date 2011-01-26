@@ -406,9 +406,9 @@ input {
       });
     },
     
-    authorizeCallback: function(win) {
+    authorizeCallback: function(tab) {
       uploadImage.is_get_verifier = false;
-      setTimeout('uploadImage.checkTabStatus(' + win.tabs[0].id + ')', 1000);
+      setTimeout('uploadImage.checkTabStatus(' + tab.id + ')', 1000);
     },
     
     getAccessToken: function() {
@@ -477,7 +477,7 @@ input {
             localStorage['upload_tabId'] = tabId;
             url += retvalue[0];
             url += "&oauth_callback=oob";// + chrome.extension.getURL('sina_authorize.html') + '?tabId=' + tabId;
-            chrome.windows.create({url: url, type:'popup'}, uploadImage.authorizeCallback);
+            chrome.tabs.create({url: url}, uploadImage.authorizeCallback);
           } else {
             alert(decodeURIComponent(xhr.responseText));
           }
