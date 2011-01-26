@@ -504,7 +504,8 @@ input {
             uploadImage.upload('sina',
               'http://api.t.sina.com.cn/statuses/upload.xml', '1350884563');
           } else {
-            photoshop.showTip('tip_failed', 'logon_tip');
+            //photoshop.showTip('tip_failed', 'logon_tip');
+            chrome.tabs.create({url: 'http://t.sina.com.cn'});
           }
         });
       } else if ($('selectFacebook').checked) {
