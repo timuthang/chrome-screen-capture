@@ -497,11 +497,18 @@ input {
      $('selectSina').checked = false;
     }, false);
     $('uploadFile').addEventListener('click', function(){
-      uploadImage.createUploadProgress();
       if($('selectSina').checked) {
-        uploadImage.upload('sina',
-          'http://api.t.sina.com.cn/statuses/upload.xml', '1350884563');
+        uploadImage.verifyUserIsLogon('sina', function(islogon) {
+          if (islogon) {
+            uploadImage.createUploadProgress();
+            uploadImage.upload('sina',
+              'http://api.t.sina.com.cn/statuses/upload.xml', '1350884563');
+          } else {
+            photoshop.showTip('tip_failed', 'logon_tip');
+          }
+        });
       } else if ($('selectFacebook').checked) {
+        uploadImage.createUploadProgress();
         uploadImage.uploadImageToFacebook();
       } else {
         photoshop.showTip('tip_failed', 'no_select_upload_position');
@@ -533,9 +540,35 @@ input {
         break;
     }
   },
+  
+  verifyUserIsLogon: function(app, callback) {
+    if (app == 'sina') {
+      var xhr = new XMLHttpRequest();
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4) {
+          if (xhr.status == 200) {
+            var picNode = xhr.responseXML.documentElement.getElementsByTagName('id')[0];
+            if (localStorage['currentSinaUser'] != picNode.textContent) {
+              localStorage['access_token'] = '';
+              localStorage['currentSinaUser'] = picNode.textContent;
+            }
+            if (callback)
+              callback(true);
+          } else if (xhr.status == 401) {
+              callback(false);
+          } else {
+            callback(false);
+          }
+        }
+      }
+      xhr.open('GET', 'http://api.t.sina.com.cn/account/verify_credentials.xml?source=1350884563');
+      xhr.send();
+    }
+  },
    
   upload: function(app, uploadUrl, token) {
-    if (app == 'sina' && !localStorage['access_token']) {
+    if (app == 'sina' && (!localStorage['access_token'] || 
+        localStorage['access_token'] == '')) {
       chrome.tabs.getCurrent(function (tab) {
         uploadImage.authorizeSina(tab.id);
       });      

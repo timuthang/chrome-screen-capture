@@ -53,5 +53,6 @@
   "upload_succeed": {"message": "Upload successful"},
   "upload_failed": {"message": "Upload failed"},
   "uploading_image": {"message": "Uploading:"},
-  "no_select_upload_position": {"message": "Please select the upload location"}
+  "no_select_upload_position": {"message": "Please select the upload location"},
+  "logon_tip": {"message": "Please logon first"}
 }

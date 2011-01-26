@@ -53,5 +53,6 @@
   "upload_succeed": {"message": "上传成功"},
   "upload_failed": {"message": "上传失败"},
   "uploading_image": {"message": "正在上传："},
-  "no_select_upload_position": {"message": "请选择上传位置"}
+  "no_select_upload_position": {"message": "请选择上传位置"},
+  "logon_tip": {"message": "请先登录"}
 }
