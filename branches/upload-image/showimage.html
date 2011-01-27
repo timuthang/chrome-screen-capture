@@ -229,41 +229,40 @@
     background: #fff1a8;
     color: #000000;
   }
-
   .tip_failed {
     color: #ffffff;
     background: #ff8080;
   }
-  
   #selectuploadposition {
-  border: 1px solid #ccc;
-  width: 300px;
-  height: 200px;
-  padding:5px;
-  position: absolute;
-  z-index: 1000;
-  left:40%;
-  top:25%;
-  display: none;
-  -webkit-box-shadow: #cccccc 0 0 7px 1px;
-  background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#d0dff2), to(#f5f9fc));
-}
-.selectcontent
-{
-  background-color: White;
-  width:300px;
-  height:168px;
-}
-button {
-  cursor: pointer;
-}
-input {
- cursor: pointer; 
-}
+    border: 1px solid #ccc;
+    width: 300px;
+    height: 200px;
+    padding: 5px;
+    position: absolute;
+    z-index: 1000;
+    left: 40%;
+    top: 25%;
+    display: none;
+    -webkit-box-shadow: #cccccc 0 0 7px 1px;
+    background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#d0dff2), to(#f5f9fc));
+  }
+  .selectcontent
+  {
+    background-color: White;
+    width:300px;
+    height:168px;
+  }
+  button {
+    cursor: pointer;
+  }
+  input {
+    cursor: pointer;
+  }
 </style>
 <script type="text/javascript" src="editer.js"></script>
 <script type="text/javascript" src="sha1.js"></script>
 <script type="text/javascript" src="oauth.js"></script>
+<script type="text/javascript" src="upload_image.js"></script>
 </head>
 <body>
   <div id="header">
@@ -329,7 +328,7 @@ input {
       <img src="images/icon_save.png" alt="">
       <span id="tSave"></span>
     </li>
-        <li id="btnUpload">
+        <li id="btnUpload" onclick="photoshop.upload()">
       <img src="images/upload.png" alt="">
       <span id="tUpload"></span>
     </li>
@@ -361,386 +360,15 @@ input {
       </div>
     </div>
     <div style="float: right; margin: 5px 15px 0 0;"><button id="uploadFile"></button><button id="cancelUpload"></button></div>
-    
   </div>
-  <iframe name="myiframe" width='0' height="0" id="myiframe"></iframe>
   <img id="pic" src="#" style="display:none">
   <embed id="pluginobj" width="0" height="0" type="application/x-screencapture">
   <script>
-  
+
   function $(id) {
     return document.getElementById(id);
   }
-  
-  chrome.extension.onRequest.addListener(function(request, sender, response) {
-      if (request.message == 'continueUpload') {
-        localStorage['oauth_verifier'] = request.value;
-        if (!uploadImage.is_get_verifier) {
-          uploadImage.is_get_verifier = true;
-          uploadImage.getAccessToken();
-        }
-      }
-    });
-  
-  var uploadImage = {
-    access_token : '',
-    is_get_verifier: false,
-    init: function() {
-      photoshop.i18nReplace('uploadFile', 'upload_file');
-      photoshop.i18nReplace('cancelUpload', 'cancel_upload');
-      photoshop.i18nReplace('sina', 'sina');
-      photoshop.i18nReplace('facebook', 'facebook');
-      photoshop.i18nReplace('tUpload', 'upload');
-      photoshop.i18nReplace('selectPrompt', 'select_prompt');
-      uploadImage.addEventListener();
-    },
-    
-    checkTabStatus: function(tabId) {
-      chrome.tabs.get(tabId, function(tab) {
-        if (tab.status == 'complete' && !uploadImage.is_get_verifier) {
-          chrome.tabs.executeScript(tabId, {file: 'get_oauth_verifier.js'});
-          setTimeout('uploadImage.checkTabStatus(' + tabId + ')', 2000);
-        } else {
-          setTimeout('uploadImage.checkTabStatus(' + tabId + ')', 2000);
-        }
-      });
-    },
-    
-    authorizeCallback: function(tab) {
-      uploadImage.is_get_verifier = false;
-      setTimeout('uploadImage.checkTabStatus(' + tab.id + ')', 1000);
-    },
-    
-    getAccessToken: function() {
-      var message = {
-        action: 'http://api.t.sina.com.cn/oauth/access_token',
-        method: 'POST',
-        parameters:{
-          'oauth_consumer_key': '1350884563',
-          'oauth_token': localStorage['oauth_token'],
-          'oauth_token_secret': localStorage['oauth_token_secret'],
-          'oauth_signature_method': 'HMAC-SHA1',
-          'oauth_verifier': localStorage['oauth_verifier'],
-          'oauth_version': '1.0'
-        }
-      };
-      var accessor = {
-        consumerKey: '1350884563',
-        consumerSecret: 'dd130d4873f31445a51cbb176f9630fe',
-        tokenSecret: localStorage['oauth_token_secret']
-      };
-      OAuth.setTimestampAndNonce(message);
-      OAuth.SignatureMethod.sign(message, accessor);
-      var xhr = new XMLHttpRequest();
-      xhr.onreadystatechange = function() {
-        if (xhr.readyState == 4) {
-          if (xhr.status == 200) {
-            var params = xhr.responseText.split('&');
-            localStorage['access_token'] = params[0].split('=')[1];
-            localStorage['oauth_token_secret'] = params[1].split('=')[1];
-            uploadImage.upload('sina', 'http://api.t.sina.com.cn/statuses/upload.xml');
-          } else {
-          }
-        }
-      }
-      xhr.open('POST', 'http://api.t.sina.com.cn/oauth/access_token');
-      var header = OAuth.getAuthorizationHeader("", message.parameters);
-      xhr.setRequestHeader('Authorization', header);
-      xhr.send();
-    },
-    
-    authorizeSina: function(tabId) {
-      var message = {
-        action: 'http://api.t.sina.com.cn/oauth/request_token',
-        method: 'POST',
-        parameters:{
-          'oauth_callback': document.URL,
-          'oauth_consumer_key': '1350884563',
-          'oauth_signature_method': 'HMAC-SHA1',
-          'oauth_version': '1.0'
-        }
-      }
-      var accessor = {
-        consumerKey: '1350884563',
-        consumerSecret: 'dd130d4873f31445a51cbb176f9630fe'
-      };
-      OAuth.setTimestampAndNonce(message);
-      OAuth.SignatureMethod.sign(message, accessor);
-      var xhr = new XMLHttpRequest();
-      xhr.onreadystatechange = function() {
-        if (xhr.readyState == 4) {
-          if (xhr.status == 200) {
-            var url = 'http://api.t.sina.com.cn/oauth/authorize?';
-            var retvalue = xhr.responseText.split('&');
-            localStorage['oauth_token'] = retvalue[0].split('=')[1];
-            localStorage['oauth_token_secret'] = retvalue[1].split('=')[1];
-            localStorage['upload_tabId'] = tabId;
-            url += retvalue[0];
-            url += "&oauth_callback=oob";// + chrome.extension.getURL('sina_authorize.html') + '?tabId=' + tabId;
-            chrome.tabs.create({url: url}, uploadImage.authorizeCallback);
-          } else {
-            alert(decodeURIComponent(xhr.responseText));
-          }
-        }
-      }
-      xhr.open('POST', 'http://api.t.sina.com.cn/oauth/request_token');
-      var header = OAuth.getAuthorizationHeader("", message.parameters);
-      xhr.setRequestHeader('Authorization', header);
-      xhr.send();
-    },
-    
-  addEventListener: function() {
-    $('selectSina').addEventListener('click', function(){
-      $('selectFacebook').checked = false;
-    }, false);
-    $('selectFacebook').addEventListener('click', function(){
-     $('selectSina').checked = false;
-    }, false);
-    $('uploadFile').addEventListener('click', function(){
-      if($('selectSina').checked) {
-        uploadImage.verifyUserIsLogon('sina', function(islogon) {
-          if (islogon) {
-            uploadImage.createUploadProgress();
-            uploadImage.upload('sina',
-              'http://api.t.sina.com.cn/statuses/upload.xml', '1350884563');
-          } else {
-            //photoshop.showTip('tip_failed', 'logon_tip');
-            chrome.tabs.create({url: 'http://t.sina.com.cn'});
-          }
-        });
-      } else if ($('selectFacebook').checked) {
-        uploadImage.createUploadProgress();
-        uploadImage.uploadImageToFacebook();
-      } else {
-        photoshop.showTip('tip_failed', 'no_select_upload_position');
-        return;
-      }
-      $('selectuploadposition').style.display = 'none';    
-    }, false);
-    $('cancelUpload').addEventListener('click', function(){
-      $('selectuploadposition').style.display = 'none';
-    }, false);
-    $('btnUpload').addEventListener('click', function() {
-      $('selectuploadposition').style.display = 'block';
-    }, false);
-  },
-  
-  getImageDataURL: function () {
-    photoshop.draw();
-    return $('canvas').toDataURL('image/png');
-  },
-   
-  getAppKey: function(app) {
-    switch(app) {
-      case 'sina' :
-        return {AppKey:'1350884563', AppSecret: 'dd130d4873f31445a51cbb176f9630fe'};
-        break ;
-      case 'facebook' :
-        return {AppID : '182294598468746', APIKey: '68ad5de371f63449b5f7b7e55f51cbcb',
-            AppSecret: 'f7c253436bd281260073d4e9527a7457'};
-        break;
-    }
-  },
-  
-  verifyUserIsLogon: function(app, callback) {
-    if (app == 'sina') {
-      var xhr = new XMLHttpRequest();
-      xhr.onreadystatechange = function() {
-        if (xhr.readyState == 4) {
-          if (xhr.status == 200) {
-            var picNode = xhr.responseXML.documentElement.getElementsByTagName('id')[0];
-            if (localStorage['currentSinaUser'] != picNode.textContent) {
-              localStorage['access_token'] = '';
-              localStorage['currentSinaUser'] = picNode.textContent;
-            }
-            if (callback)
-              callback(true);
-          } else if (xhr.status == 401) {
-              callback(false);
-          } else {
-            callback(false);
-          }
-        }
-      }
-      xhr.open('GET', 'http://api.t.sina.com.cn/account/verify_credentials.xml?source=1350884563');
-      xhr.send();
-    }
-  },
-   
-  upload: function(app, uploadUrl, token) {
-    if (app == 'sina' && (!localStorage['access_token'] || 
-        localStorage['access_token'] == '')) {
-      chrome.tabs.getCurrent(function (tab) {
-        uploadImage.authorizeSina(tab.id);
-      });      
-      return;
-    }
-      
-    var dataUrl = uploadImage.getImageDataURL();
-    var imgdataIndex = dataUrl.indexOf('data:image/png;base64,');
-    if (imgdataIndex != 0) {
-      return;
-    }
-    var imagedata = atob(dataUrl.substr(imgdataIndex+22));  
-    var xhr = new XMLHttpRequest();
-    XMLHttpRequest.prototype.sendAsBinary = function(text) {
-      var data = new ArrayBuffer(text.length);
-      var ui8a = new Uint8Array(data);
-      for (var i = 0; i < text.length; i++) {     
-        ui8a[i] = (text.charCodeAt(i) & 0xff);
-      }
-      var bb = new BlobBuilder();
-      bb.append(data);
-      var blob = bb.getBlob();
-      this.send(blob);
-    }
-    xhr.onreadystatechange = function() {
-      if (xhr.readyState == 4) {
-        if(app == 'sina') {
-          if (xhr.status == 200) {  
-            var picNode = xhr.responseXML.documentElement.getElementsByTagName('original_pic')[0];
-            photoshop.showLink('tip_succeed', 'upload_succeed', picNode.textContent);
-          }  else if (xhr.status == 403) {
-            chrome.tabs.create({url: 'http://t.sina.com.cn/login.php'});
-          } else {
-          $('selectuploadposition').style.display = 'none';
-            photoshop.showTip('tip_failed', 'upload_failed');
-          }     
-        } else if (app == 'facebook') {
-          if (xhr.status == 200 && xhr.responseXML != null) {
-            var rootname = xhr.responseXML.documentElement.nodeName;
-            if (rootname == 'error_response') {
-              photoshop.showTip('tip_failed', 'upload_failed');
-            } else if (rootname == 'photos_upload_response') {
-              var picNode = xhr.responseXML.documentElement.getElementsByTagName('src_big')[0];
-              photoshop.showLink('tip_succeed', 'upload_succeed', picNode.textContent);
-            } else {
-              photoshop.showTip('tip_failed', 'upload_failed');
-            }
-          }       
-        }
-        document.body.removeChild($('uploadProgress'));                
-      } 
-    }
-    
-    xhr.upload.addEventListener('progress', function (e) {  
-      if (e.lengthComputable) {  
-        var percentage = Math.round((e.loaded * 100) / e.total);
-         var uploadProgress = $('uploadProgress'); 
-         uploadProgress.innerText = chrome.i18n.getMessage('uploading_image') + percentage + "%";
-      }  
-    }, false);  
-    
-    xhr.open('POST', uploadUrl);
-    var boundary = 'GOOGLESCREENCAPTURE';
-    xhr.setRequestHeader('Content-Type', 
-        'multipart/form-data, boundary='+boundary);
-    var body = '';
-    body += "--" + boundary + "\r\n";
-    if(app == 'sina') {
-      var caption = '你好' + parseInt(Math.random()*100000000000) + "随机数";
-      var message = {
-        action: uploadUrl,
-        method: 'POST',
-        parameters:{
-          'oauth_consumer_key': '1350884563',
-          'oauth_token': localStorage['access_token'],
-          'oauth_signature_method': 'HMAC-SHA1',
-          'status': encodeURIComponent(caption),
-          'oauth_version': '1.0'
-        }
-      }
-      var accessor = {
-        consumerSecret: 'dd130d4873f31445a51cbb176f9630fe',
-        tokenSecret: localStorage['oauth_token_secret']
-      };
-      OAuth.setTimestampAndNonce(message);
-      OAuth.SignatureMethod.sign(message, accessor);
-      
-      var header = OAuth.getAuthorizationHeader("", message.parameters);
-      xhr.setRequestHeader('Authorization', header);
-            
-      body += 'Content-Disposition: form-data; name=\"status\"\r\n\r\n';
-      body += encodeURIComponent(caption)+"\r\n";
-      body += '--' + boundary + '\r\n';
-      body += 'Content-Disposition: form-data; name=\"pic\"; filename=\"test.png\"\r\n';
-    } else {
-      body += 'Content-Disposition: form-data; name=\"access_token\"\r\n\r\n';
-      body += token+'\r\n';
-      body += '--' + boundary + '\r\n';
-      body += 'Content-Disposition: form-data; name=\"aid\"\r\n\r\n';
-      body += 'Screen Capture Upload Album\r\n';
-      body += '--' + boundary + '\r\n';
-      body += 'Content-Disposition: form-data; filename=\"test.png\"\r\n';
-    }
-    body += 'Content-type: image/png\r\n\r\n';
-    body += imagedata + '\r\n';
-    body += '--' + boundary + '--\r\n';
-    xhr.sendAsBinary(body);     
-  },
-  
-  createUploadProgress: function () {
-    var div = document.createElement('DIV');
-    div.className = 'tip_succeed';
-    div.id = 'uploadProgress';
-    document.body.appendChild(div);
-    div.style.left = (document.body.clientWidth - div.clientWidth) / 2 + 'px';
-  },
 
-  uploadImageToFacebook: function() {
-    if(''==uploadImage.access_token) {
-      var url =' https://graph.facebook.com/oauth/authorize?'+
-          'client_id=182294598468746&redirect_uri=http://www'+
-          '.facebook.com/connect/login_success.html&scope='+
-          'user_photos,user_videos,publish_stream';
-      chrome.tabs.create({url: url}, function(tab) {
-        chrome.tabs.onUpdated.addListener(function(tabId, changeinfo, tab){
-          if (changeinfo.url) {
-            var allowUrlIndex = changeinfo.
-                url.indexOf('http://www.facebook.com/connect/login_success.html?code=');
-            var denyUrlIndex = changeinfo.url.indexOf
-                ('http://www.facebook.com/connect/login_success.html?error_reason=user_denied');
-            if (allowUrlIndex != -1) {
-              var codeURL = changeinfo.url.substr(changeinfo.url.indexOf('='), changeinfo.url.length);
-              var url = 'https://graph.facebook.com/oauth/access_token?'+
-                  'client_id=182294598468746&redirect_uri=http://www.fac'+
-                  'ebook.com/connect/login_success.html&client_secret=f7'+
-                  'c253436bd281260073d4e9527a7457&code' + codeURL;
-              uploadImage.requestFacebook(url);
-              var executeCode = 'document.body.innerHTML = "' +
-                  "<div style='position:absolute; top:20%; left: 20%;'>"+
-                  "<table><tr><td><img src='"+chrome.extension.getURL('images/facebook.gif')+"'></td><td >" +
-                  "<a style='color: #547ABC; font-size: 30px;' href='http://www.fac" +
-                  "ebook.com'>http://www.facebook.com</a></td></tr></table></div>" +'"';
-              chrome.tabs.executeScript(tabId, {code: executeCode}); 
-            } else if (denyUrlIndex != -1) {   
-              photoshop.showTip('tip_failed', 'upload_failed');       
-            }
-          }
-        });   
-      });
-    } else {
-      uploadImage.upload('facebook', 
-          'https://api.facebook.com/method/photos.upload?caption=你好，这是测试图片', 
-          uploadImage.access_token);
-    }  
-  },
-    
-  requestFacebook: function(url) {
-    var xmlHttp=new XMLHttpRequest();
-    xmlHttp.onreadystatechange=function() {
-      if(xmlHttp.readyState==4) {
-        uploadImage.access_token = xmlHttp.responseText.split('=')[1].split('&')[0];
-        uploadImage.upload('facebook', 
-            'https://api.facebook.com/method/photos.upload?caption=你好，这是测试图片', 
-            uploadImage.access_token);
-      }
-    }
-    xmlHttp.open("GET",url,false);
-    xmlHttp.send(null);
-  }
-  }
- 
   var bg = chrome.extension.getBackgroundPage();
   var canvas = new Canvas();
   var photoshop = {
@@ -1229,8 +857,14 @@ input {
       }
     },
 
+    upload: function() {
+      photoshop.draw();
+      $('selectuploadposition').style.display = 'block';
+    },
+
     save: function() {
-      var dataUrl = uploadImage.getImageDataURL();
+      photoshop.draw();
+      var dataUrl = $('canvas').toDataURL('image/png');
       // Here we use the plugin object in showimage.html instead of the plugin object
       // in background page, so that the SaveScreenshot dialog will be a modal dialog.
       var pluginobj = document.getElementById('pluginobj');
@@ -1245,7 +879,8 @@ input {
     },
 
     copy: function() {
-      var data = uploadImage.getImageDataURL();
+      photoshop.draw();
+      var dataUrl = $('canvas').toDataURL('image/png');
       var copyFlag = bg.plugin.saveToClipboard(data);
       if (copyFlag) {
         photoshop.showTip('tip_succeed', 'tip_copy_succeed');
@@ -1253,9 +888,8 @@ input {
         photoshop.showTip('tip_failed', 'tip_copy_failed');
       }
       photoshop.finish();
-
     },
-   
+
     drawLineOnMaskCanvas: function(startX, startY, endX, endY, type, layerId) {
       var ctx = $('mask-canvas').getContext('2d');
       ctx.clearRect(0, 0, $('mask-canvas').width, $('mask-canvas').height);
@@ -1532,7 +1166,7 @@ input {
       div.className = className;
       div.innerText = chrome.i18n.getMessage(message);
       if (arguments.length == 3)
-      div.innerHTML = div.innerText + '<a target="_blank" href="' + arguments[2] +'"/>' + 
+      div.innerHTML = div.innerText + '<a target="_blank" href="' + arguments[2] +'"/>' +
         arguments[2] + '</a>';
       document.body.appendChild(div);
       div.style.left = (document.body.clientWidth - div.clientWidth) / 2 + 'px';
@@ -1540,14 +1174,14 @@ input {
         document.body.removeChild(div);
       }, 2000);
     },
-    
+
     showLink: function(className, message, link) {
       var div = document.createElement('DIV');
       div.className = className;
       document.body.appendChild(div);
       div.style.width = (document.body.clientWidth) / 3 + 'px';
       div.style.left = (document.body.clientWidth - div.clientWidth) / 2 + 'px';
-      div.innerHTML = chrome.i18n.getMessage(message) + ' <a target="_blank" href="' + link +'"/>' + 
+      div.innerHTML = chrome.i18n.getMessage(message) + ' <a target="_blank" href="' + link +'"/>' +
         link + '</a>';
       window.setTimeout(function() {
         document.body.removeChild(div);
@@ -1555,7 +1189,7 @@ input {
     }
   };
 
-  
+
 
   function $(id) {
     return document.getElementById(id);
