@@ -22,6 +22,14 @@ var plugin = {
   },
   saveToClipboard: function(data) {
     return this.pluginObj.SaveToClipboard(data);
+  },
+  captureScreen: function() {
+    this.pluginObj.CaptureScreen();
+  },
+  setButtonCaption: function() {
+    var ok = chrome.i18n.getMessage('ok');
+    var cancel = chrome.i18n.getMessage('cancel');
+    this.pluginObj.SetButtonMessage(ok, cancel);
   }
 }
 
@@ -85,6 +93,10 @@ var screenshot = {
     screenshot.sendMessage({msg: 'show_selection_area'}, null);
   },
 
+  captureScreen: function() {
+    plugin.captureScreen();
+  },
+  
   captureWindow: function() {
     screenshot.sendMessage({msg: 'capture_window'},
         screenshot.onResponseVisibleSize);
@@ -144,6 +156,18 @@ var screenshot = {
       };
       image.src = data;
     });
+  },
+  
+  captureScreenCallback: function(data) {
+    var image = new Image();
+    image.onload = function() {
+      screenshot.canvas.width = image.width;
+      screenshot.canvas.height = image.height;
+      var context = screenshot.canvas.getContext("2d");
+      context.drawImage(image, 0, 0);
+      screenshot.postImage();
+    };
+    image.src = "data:image/bmp;base64," + data;
   },
 
   /**
@@ -294,8 +318,9 @@ var screenshot = {
       }
     });
   },
-  
+
   init: function() {
+    plugin.setButtonCaption();
     var savePath = plugin.getDefaultSavePath();
     localStorage.savePath = localStorage.savePath ?
         localStorage.savePath : savePath;

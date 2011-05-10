@@ -33,6 +33,10 @@ public:
                       NPVariant* result);
   bool SaveToClipboard(const NPVariant* args, uint32_t argCount,
                        NPVariant* result);
+  bool CaptureScreen(const NPVariant* args, uint32_t argCount,
+                     NPVariant* result);
+  bool SetButtonMessage(const NPVariant* args, uint32_t argCount,
+                        NPVariant* result);
 
   void InitHandler();
 

@@ -18,6 +18,7 @@
 
 #include "log.h"
 #include "screen_capture_plugin.h"
+#include "utils.h"
 
 #ifdef _WINDOWS
 using namespace Gdiplus;
@@ -70,6 +71,14 @@ void ScreenCaptureScriptObject::InitHandler() {
   item.function_name = "SaveToClipboard";
   item.function_pointer = ON_INVOKEHELPER(
       &ScreenCaptureScriptObject::SaveToClipboard);
+  AddFunction(item);
+  item.function_name = "CaptureScreen";
+  item.function_pointer = ON_INVOKEHELPER(
+      &ScreenCaptureScriptObject::CaptureScreen);
+  AddFunction(item);
+  item.function_name = "SetButtonMessage";
+  item.function_pointer = ON_INVOKEHELPER(
+      &ScreenCaptureScriptObject::SetButtonMessage);
   AddFunction(item);
 }
 
@@ -665,5 +674,33 @@ bool ScreenCaptureScriptObject::SaveScreenshot(
       file.empty() || SaveFileBase64(file.c_str(), base64, base64size));
 #endif
 
+  return true;
+}
+
+bool ScreenCaptureScriptObject::CaptureScreen(const NPVariant* args, 
+                                              uint32_t argCount, 
+                                              NPVariant* result) {
+  ScreenCapturePlugin* plugin = (ScreenCapturePlugin*)get_plugin();
+  if (plugin)
+    plugin->CaptureScreen();
+  return true;
+}
+
+bool ScreenCaptureScriptObject::SetButtonMessage(const NPVariant* args, 
+                                                 uint32_t argCount, 
+                                                 NPVariant* result) {
+  if (argCount != 2 || !NPVARIANT_IS_STRING(args[0]) ||
+      !NPVARIANT_IS_STRING(args[1]))
+    return false;
+  
+#ifdef _WINDOWS
+  utils::Utf8ToUnicode ok_caption(NPVARIANT_TO_STRING(args[0]).UTF8Characters);
+  utils::Utf8ToUnicode cancel_caption(
+      NPVARIANT_TO_STRING(args[1]).UTF8Characters);
+
+  ScreenCapturePlugin* plugin = (ScreenCapturePlugin*)get_plugin();
+  if (plugin)
+    plugin->SetButtonMessage(ok_caption, cancel_caption);
+#endif
   return true;
 }
