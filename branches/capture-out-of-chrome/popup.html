@@ -82,12 +82,14 @@ li:hover {
     if (request.msg == 'page_capturable') {
       $('tip').style.display = 'none';
       $('captureSpecialPageItem').style.display = 'none';
+      $('captureScreenItem').style.display = 'block';
       $('captureWindowItem').style.display = 'block';
       $('captureAreaItem').style.display = 'block';
       $('captureWebpageItem').style.display = 'block';
     } else if (request.msg == 'page_uncapturable') {
       i18nReplace('tip', 'special');
       $('tip').style.display = 'block';
+      $('captureScreenItem').style.display = 'block';
       $('captureSpecialPageItem').style.display = 'none';
       $('captureWindowItem').style.display = 'none';
       $('captureAreaItem').style.display = 'none';
@@ -97,7 +99,11 @@ li:hover {
 
   function toDo(what) {
     var bg = chrome.extension.getBackgroundPage();
-    switch(what) {
+    switch (what) {
+      case 'capture_screen':
+        bg.screenshot.captureScreen();
+        window.close();
+        break;
       case 'capture_window':
         bg.screenshot.captureWindow();
         window.close();
@@ -129,6 +135,7 @@ li:hover {
   function init() {
     i18nReplace('captureSpecialPageText', 'capture_window');
     i18nReplace('capturing', 'capturing');
+    i18nReplace('captureScreenText', 'capture_screen');
     i18nReplace('captureWindowText', 'capture_window');
     i18nReplace('captureAreaText', 'capture_area');
     i18nReplace('captureWebpageText', 'capture_webpage');
@@ -136,11 +143,13 @@ li:hover {
       $('captureWindowShortcut').style.display = 'inline';
       $('captureAreaShortcut').style.display = 'inline';
       $('captureWebpageShortcut').style.display = 'inline';
+      $('captureScreenShortcut').style.display = 'inline';
       document.body.style.minWidth = "190px"
     } else {
       $('captureWindowShortcut').style.display = 'none';
       $('captureAreaShortcut').style.display = 'none';
       $('captureWebpageShortcut').style.display = 'none';
+      $('captureScreenShortcut').style.display = 'inline';
       document.body.style.minWidth = "140px";
     }
     var isScriptLoad = false;
@@ -148,6 +157,7 @@ li:hover {
       if (tab.url.indexOf('chrome') == 0) {
         $('tip').style.display = 'none';
         $('captureSpecialPageItem').style.display = 'block';
+        $('captureScreenItem').style.display = 'block';
         return;
       }
       chrome.tabs.sendRequest(tab.id, {msg: 'is_page_capturable'},
@@ -155,7 +165,8 @@ li:hover {
           isScriptLoad = true;
           if (response.msg == 'capturable') {
             $('tip').style.display = 'none';
-            $('captureSpecialPageItem').style.display = 'none';
+            $('captureScreenItem').style.display = 'block';
+            $('captureWindowItem').style.display = 'block';
             $('captureWindowItem').style.display = 'block';
             $('captureAreaItem').style.display = 'block';
             $('captureWebpageItem').style.display = 'block';
@@ -181,6 +192,7 @@ li:hover {
       if (isScriptLoad == false) {
         $('tip').style.display = 'none';
         $('captureSpecialPageItem').style.display = 'block';
+        $('captureScreenItem').style.display = 'block';
       }
     }
     setTimeout(insertScript, 500);
@@ -193,7 +205,15 @@ li:hover {
   </div>
   <div id="tip"></div>
   <div id="item">
-  <ul><li id="captureSpecialPageItem" class="menuI"
+  <ul><li id="captureScreenItem" class="menuI"
+      onclick="toDo('capture_screen');">
+    <div class="menu" id="captureSpecialPage"
+      style="background-image: url(images/region.png);">
+      <span class="text" id="captureScreenText"></span>
+      <span class="shortcut" id="captureScreenShortcut">Ctrl+Alt+C</span>
+    </div>
+  </li>
+    <li id="captureSpecialPageItem" class="menuI"
       onclick="toDo('capture_special_page');">
     <div class="menu" id="captureSpecialPage"
       style="background-image: url(images/screen.png);">
