@@ -29,7 +29,8 @@ var plugin = {
   setButtonCaption: function() {
     var ok = chrome.i18n.getMessage('ok');
     var cancel = chrome.i18n.getMessage('cancel');
-    this.pluginObj.SetButtonMessage(ok, cancel);
+    if (this.pluginObj.SetButtonMessage)
+      this.pluginObj.SetButtonMessage(ok, cancel);
   }
 }
 
@@ -145,7 +146,8 @@ var screenshot = {
 
   captureSpecialPage: function() {
     var formatParam  = localStorage.screenshootQuality || 'png';
-    chrome.tabs.captureVisibleTab(null, {format: formatParam, quality: 50}, function(data) {
+    chrome.tabs.captureVisibleTab(
+        null, {format: formatParam, quality: 50}, function(data) {
       var image = new Image();
       image.onload = function() {
         screenshot.canvas.width = image.width;
@@ -177,7 +179,8 @@ var screenshot = {
   capturePortion: function(x, y, width, height,
                            visibleWidth, visibleHeight, docWidth, docHeight) {
     var formatParam  = localStorage.screenshootQuality || 'png';
-    chrome.tabs.captureVisibleTab(null, {format: formatParam, quality: 50}, function(data) {
+    chrome.tabs.captureVisibleTab(
+        null, {format: formatParam, quality: 50}, function(data) {
       var image = new Image();
       image.onload = function() {
         var curHeight = image.width < docWidth ?
@@ -199,7 +202,8 @@ var screenshot = {
 
   captureVisible: function(docWidth, docHeight) {
     var formatParam  = localStorage.screenshootQuality || 'png';
-    chrome.tabs.captureVisibleTab(null, {format: formatParam, quality: 50}, function(data) {
+    chrome.tabs.captureVisibleTab(
+        null, {format: formatParam, quality: 50}, function(data) {
       var image = new Image();
       image.onload = function() {
         var width = image.height < docHeight ?
@@ -221,17 +225,22 @@ var screenshot = {
   */
   captureAndScroll: function() {
     var formatParam  = localStorage.screenshootQuality || 'png';
-    chrome.tabs.captureVisibleTab(null, {format: formatParam, quality: 50}, function(data) {
+    chrome.tabs.captureVisibleTab(
+        null, {format: formatParam, quality: 50}, function(data) {
       var image = new Image();
       image.onload = function() {
         var context = screenshot.canvas.getContext('2d');
         var width = 0;
         var height = 0;
-        screenshot.scrollBarY = screenshot.visibleHeight < screenshot.docHeight ? 17 : 0;
-        screenshot.scrollBarX = screenshot.visibleWidth < screenshot.docWidth ? 17 : 0;
-        var visibleWidth = (image.width - screenshot.scrollBarY < screenshot.canvas.width ?
+        screenshot.scrollBarY = 
+            screenshot.visibleHeight < screenshot.docHeight ? 17 : 0;
+        screenshot.scrollBarX = 
+            screenshot.visibleWidth < screenshot.docWidth ? 17 : 0;
+        var visibleWidth = 
+            (image.width - screenshot.scrollBarY < screenshot.canvas.width ?
             image.width - screenshot.scrollBarY : screenshot.canvas.width) ;
-        var visibleHeight = (image.height - screenshot.scrollBarX < screenshot.canvas.height ?
+        var visibleHeight = 
+            (image.height - screenshot.scrollBarX < screenshot.canvas.height ?
             image.height - screenshot.scrollBarX : screenshot.canvas.height);
         var x1 = screenshot.startX - screenshot.scrollX;
         var x2 = 0;
@@ -248,11 +257,12 @@ var screenshot = {
         if ((screenshot.scrollXCount + 1) * visibleHeight >
             screenshot.canvas.height) {
           height = screenshot.canvas.height % visibleHeight;
-          if ((screenshot.scrollXCount + 1) * visibleHeight + screenshot.scrollY < screenshot.docHeight) {
+          if ((screenshot.scrollXCount + 1) * visibleHeight + 
+              screenshot.scrollY < screenshot.docHeight) {
             y1 = 0;
           } else {
-            y1 = (screenshot.scrollXCount + 1) * visibleHeight + screenshot.scrollY -
-                screenshot.docHeight ;
+            y1 = (screenshot.scrollXCount + 1) * visibleHeight + 
+                screenshot.scrollY - screenshot.docHeight ;
           }
 
         } else {
