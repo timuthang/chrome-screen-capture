@@ -15,6 +15,11 @@
 
 extern Log g_logger;
 
+#ifdef _WINDOWS
+int ScreenCapturePlugin::keycode_ = 0;
+NativeWindow ScreenCapturePlugin::hotkey_window_ = NULL;
+#endif
+
 NPError ScreenCapturePlugin::Init(NPP instance, uint16_t mode, int16_t argc,
                                    char* argn[],char* argv[], 
                                    NPSavedData* saved) {
@@ -112,11 +117,12 @@ INT_PTR CALLBACK Preview(HWND hDlg, UINT message,
   return (INT_PTR)FALSE;
 }
 
-LRESULT CALLBACK WndProc(HWND hWnd, UINT message, 
-                         WPARAM wParam, LPARAM lParam) {
+LRESULT ScreenCapturePlugin::WndProc(HWND hWnd, UINT message,
+                                     WPARAM wParam, LPARAM lParam) {
   switch (message) {
     case WM_HOTKEY:
-      if (HIWORD(lParam) == 'C' && LOWORD(lParam) == (MOD_CONTROL | MOD_ALT))
+      if (HIWORD(lParam) == keycode_ && 
+          LOWORD(lParam) == (MOD_CONTROL | MOD_ALT))
         PostMessage(hWnd, WM_CAPTURESCREEN, 0, 0);
       break;
     case WM_CAPTURESCREEN: {
@@ -148,19 +154,21 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
 #endif
 
 NPError ScreenCapturePlugin::SetWindow(NPWindow* window) {
-  PluginBase::SetWindow(window);
-
 #ifdef _WINDOWS
-  if (get_native_window() == NULL && old_proc_ != NULL) {
-    KillTimer(get_native_window(), 1);
-    SubclassWindow(get_native_window(), old_proc_);
-    old_proc_ = NULL; 
+  if (hotkey_window_ == NULL && window->window != NULL) {
+    hotkey_window_ = (NativeWindow)window->window;
   }
 
-  if (get_native_window() != NULL && old_proc_ == NULL) {
-    ATOM id = GlobalAddAtom(_T("CTRL+ALT+C"));
-    RegisterHotKey(get_native_window(), id, MOD_CONTROL | MOD_ALT, 'C');
+  if (window->window == NULL && old_proc_ != NULL) {
+    SubclassWindow(get_native_window(), old_proc_);
+    old_proc_ = NULL;
+    if (get_native_window() == hotkey_window_)
+      hotkey_window_ = NULL;
+  }
 
+  PluginBase::SetWindow(window);
+
+  if (get_native_window() != NULL && old_proc_ == NULL) {
     old_proc_ = SubclassWindow(get_native_window(), WndProc);
     SetWindowLong(get_native_window(), GWLP_USERDATA, (LONG)this);
   }
@@ -179,6 +187,25 @@ void ScreenCapturePlugin::CaptureScreen() {
 void ScreenCapturePlugin::SetButtonMessage(WCHAR* ok_caption, 
                                            WCHAR* cancel_caption) {
   CaptureWindow::SetButtonMessage(ok_caption, cancel_caption);
+}
+
+bool ScreenCapturePlugin::SetHotKey(int keycode) {
+  if (hotkey_window_) {
+    std::string hotkey = "CTRL+ALT+";
+    ATOM atom;
+    if (keycode_ != 0) {
+      hotkey += keycode_;
+      atom = GlobalFindAtomA(hotkey.c_str());
+      UnregisterHotKey(hotkey_window_, atom);
+    }
+    hotkey += keycode;
+    atom = GlobalAddAtomA(hotkey.c_str());
+    if (RegisterHotKey(hotkey_window_, atom, MOD_CONTROL | MOD_ALT, keycode)) {
+      keycode_ = keycode;
+      return true;
+    }
+  }
+  return false;
 }
 #endif
 

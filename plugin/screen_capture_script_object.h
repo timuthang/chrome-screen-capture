@@ -37,6 +37,8 @@ public:
                      NPVariant* result);
   bool SetButtonMessage(const NPVariant* args, uint32_t argCount,
                         NPVariant* result);
+  bool SetHotKey(const NPVariant* args, uint32_t argCount,
+                 NPVariant* result);
 
   void InitHandler();
 
