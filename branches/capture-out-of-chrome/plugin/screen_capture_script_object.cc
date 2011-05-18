@@ -80,6 +80,10 @@ void ScreenCaptureScriptObject::InitHandler() {
   item.function_pointer = ON_INVOKEHELPER(
       &ScreenCaptureScriptObject::SetButtonMessage);
   AddFunction(item);
+  item.function_name = "SetHotKey";
+  item.function_pointer = ON_INVOKEHELPER(
+      &ScreenCaptureScriptObject::SetHotKey);
+  AddFunction(item);
 }
 
 
@@ -702,5 +706,24 @@ bool ScreenCaptureScriptObject::SetButtonMessage(const NPVariant* args,
   if (plugin)
     plugin->SetButtonMessage(ok_caption, cancel_caption);
 #endif
+  return true;
+}
+
+bool ScreenCaptureScriptObject::SetHotKey(const NPVariant* args, 
+                                          uint32_t argCount, 
+                                          NPVariant* result) {
+  if (argCount != 1 || 
+      (!NPVARIANT_IS_INT32(args[0]) && !NPVARIANT_IS_DOUBLE(args[0])))
+    return false;
+
+  BOOLEAN_TO_NPVARIANT(false, *result);
+
+#ifdef _WINDOWS
+  int keycode = NPVARIANT_IS_DOUBLE(args[0]) ? NPVARIANT_TO_DOUBLE(args[0]) :
+      NPVARIANT_TO_INT32(args[0]);
+  bool ret = ScreenCapturePlugin::SetHotKey(keycode);
+  BOOLEAN_TO_NPVARIANT(ret, *result);
+#endif
+
   return true;
 }
