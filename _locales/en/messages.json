@@ -71,5 +71,7 @@
   "sina_failed_to_get_user_info": {"message": "Get user information failed, please try again later."},
   "facebook_user_denied": {"message": "User denied."},
   "user_authentication_tip": {"message": "User authenticating, please wait..."},
-  "user_logout_tip": {"message": "Signing out, please wait..."}
+  "user_logout_tip": {"message": "Signing out, please wait..."},
+  "failed_to_register_hot_key_for_screen_capture": {"message": "The shortcut for Capture Screen Region is registered by another application. Please redefine it."},
+  "hot_key_conflict": {"message": "Shortcuts conflict."}
 }

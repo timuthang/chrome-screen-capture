@@ -8,31 +8,42 @@
 </head>
 <body>
 <embed id="pluginObj" type="application/x-screencapture">
+<script src="hotkey_storage.js"></script>
 <script>
 var plugin = {
   pluginObj: document.getElementById('pluginObj'),
+
   autoSave: function(data, title, path) {
     return this.pluginObj.AutoSave(data, title, path);
   },
+
   openSavePath : function(path) {
     this.pluginObj.OpenSavePath(path);
   },
+
   getDefaultSavePath: function() {
     return this.pluginObj.GetDefaultSavePath();
   },
+
   saveToClipboard: function(data) {
     return this.pluginObj.SaveToClipboard(data);
   },
+
   captureScreen: function() {
     this.pluginObj.CaptureScreen();
   },
+
   setButtonCaption: function() {
     var ok = chrome.i18n.getMessage('ok');
     var cancel = chrome.i18n.getMessage('cancel');
     if (this.pluginObj.SetButtonMessage)
       this.pluginObj.SetButtonMessage(ok, cancel);
+  },
+
+  setHotKey: function(keyCode) {
+    return this.pluginObj.SetHotKey(keyCode);
   }
-}
+};
 
 var screenshot = {
   tab: 0,
@@ -51,29 +62,51 @@ var screenshot = {
   scrollBarY: 17,
   captureStatus: true,
 
+  handleHotKey: function(keyCode) {
+    if (HotKey.isEnabled()) {
+      switch(keyCode) {
+      case HotKey.getCharCode('area'):
+        screenshot.showSelectionArea();
+        break;
+      case HotKey.getCharCode('viewport'):
+        screenshot.captureWindow();
+        break;
+      case HotKey.getCharCode('fullpage'):
+        screenshot.captureWebpage();
+        break;
+      case HotKey.getCharCode('screen'):
+        screenshot.captureScreen();
+        break
+      }
+    }
+  },
+  
   /**
   * Receive messages from content_script, and then decide what to do next
   */
   addMessageListener: function() {
     chrome.extension.onRequest.addListener(function(request, sender, response) {
       var obj = request;
-      var isShortcut =  eval(localStorage.settingShortcut);
+      var hotKeyEnabled =  HotKey.isEnabled();
       switch(obj.msg) {
+        case 'capture_hot_key':
+          screenshot.handleHotKey(obj.keyCode);
+          break;
         case 'capture_selected':
           screenshot.captureSelected();
           break;
         case 'capture_window':
-          if (isShortcut) {
+          if (hotKeyEnabled) {
             screenshot.captureWindow();
-          } 
+          }
           break;
         case 'capture_area':
-          if (isShortcut) {
+          if (hotKeyEnabled) {
             screenshot.showSelectionArea();
           }
           break;
         case 'capture_webpage':
-          if (isShortcut) {
+          if (hotKeyEnabled) {
             screenshot.captureWebpage();
           }
           break;
@@ -334,10 +367,11 @@ var screenshot = {
     var savePath = plugin.getDefaultSavePath();
     localStorage.savePath = localStorage.savePath ?
         localStorage.savePath : savePath;
-    localStorage.settingShortcut = localStorage.settingShortcut || true;
     localStorage.screenshootQuality = localStorage.screenshootQuality || 'png';
     screenshot.executeScriptsInExistingTabs();
     screenshot.addMessageListener();
+
+    HotKey.setup(plugin);
   }
 };
 

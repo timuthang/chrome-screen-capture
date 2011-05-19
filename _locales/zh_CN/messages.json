@@ -74,5 +74,7 @@
   "sina_failed_to_get_user_info": {"message": "无法获取用户信息，请稍候再试。"},
   "facebook_user_denied": {"message": "用户拒绝。"},
   "user_authentication_tip": {"message": "用户认证中，请稍候..."},
-  "user_logout_tip": {"message": "用户注销中，请稍候..."}
+  "user_logout_tip": {"message": "用户注销中，请稍候..."},
+  "failed_to_register_hot_key_for_screen_capture": {"message": "屏幕区域截图快捷键已被其他应用程序占用，请重新定义。"},
+  "hot_key_conflict": {"message": "快捷键冲突。"}
 }
