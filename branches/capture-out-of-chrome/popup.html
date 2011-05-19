@@ -71,7 +71,14 @@ li:hover {
   font-family: Verdana, simsun;
   text-align: left;
 }
+.separator {
+  display: block;
+  width: 100%;
+  border-top: 1px solid #ddd;
+  margin: 5px 0;
+}
 </style>
+<script src="hotkey_storage.js"></script>
 <script type='text/javascript'>
 
   function $(id) {
@@ -148,7 +155,7 @@ li:hover {
     i18nReplace('captureWindowText', 'capture_window');
     i18nReplace('captureAreaText', 'capture_area');
     i18nReplace('captureWebpageText', 'capture_webpage');
-    if (eval(localStorage.settingShortcut)) {
+    if (HotKey.isEnabled()) {
       $('captureWindowShortcut').style.display = 'inline';
       $('captureAreaShortcut').style.display = 'inline';
       $('captureWebpageShortcut').style.display = 'inline';
@@ -215,6 +222,12 @@ li:hover {
       }
     }
     setTimeout(insertScript, 500);
+
+    // Update hot key.
+    $('captureAreaShortcut').innerText = 'Ctrl+Alt+' + HotKey.get('area');
+    $('captureWindowShortcut').innerText = 'Ctrl+Alt+' + HotKey.get('viewport');
+    $('captureWebpageShortcut').innerText ='Ctrl+Alt+' + HotKey.get('fullpage');
+    $('captureScreenShortcut').innerText = 'Ctrl+Alt+' + HotKey.get('screen');
   }
 </script>
 </head>
@@ -224,42 +237,43 @@ li:hover {
   </div>
   <div id="tip"></div>
   <div id="item">
-  <ul><li id="captureScreenItem" class="menuI"
-      onclick="toDo('capture_screen');">
-    <div class="menu" id="captureSpecialPage"
-      style="background-image: url(images/region.png);">
-      <span class="text" id="captureScreenText"></span>
-      <span class="shortcut" id="captureScreenShortcut">Ctrl+Alt+C</span>
-    </div>
-  </li>
-    <li id="captureSpecialPageItem" class="menuI"
-      onclick="toDo('capture_special_page');">
-    <div class="menu" id="captureSpecialPage"
-      style="background-image: url(images/screen.png);">
-      <span class="text" id="captureSpecialPageText"></span>
-    </div>
-  </li>
-  <li id="captureAreaItem" class="menuI" onclick="toDo('capture_area');">
-    <div class="menu" id="captureArea"
-      style="background-image: url(images/custom.png);">
-      <span class="text" id="captureAreaText"></span>
-      <span class="shortcut" id="captureAreaShortcut">Ctrl+Alt+R</span>
-    </div>
-  </li>
-  <li id="captureWindowItem" class="menuI" onclick="toDo('capture_window');">
-    <div class="menu" id="captureWindow"
-      style="background-image: url(images/screen.png);">
-      <span class="text" id="captureWindowText"></span>
-      <span class="shortcut" id="captureWindowShortcut">Ctrl+Alt+V</span>
-    </div>
-  </li>
-  <li id="captureWebpageItem" class="menuI" onclick="toDo('capture_webpage');">
-    <div class="menu" id="captureWebpage"
-      style="background-image: url(images/whole.png);">
-      <span class="text" id="captureWebpageText"></span>
-      <span class="shortcut" id="captureWebpageShortcut">Ctrl+Alt+H</span>
-    </div>
-  </li></ul>
+  <ul>
+    <li id="captureSpecialPageItem" class="menuI" onclick="toDo('capture_special_page');">
+      <div class="menu" id="captureSpecialPage"
+        style="background-image: url(images/screen.png);">
+        <span class="text" id="captureSpecialPageText"></span>
+      </div>
+    </li>
+    <li id="captureAreaItem" class="menuI" onclick="toDo('capture_area');">
+      <div class="menu" id="captureArea"
+        style="background-image: url(images/custom.png);">
+        <span class="text" id="captureAreaText"></span>
+        <span class="shortcut" id="captureAreaShortcut">Ctrl+Alt+R</span>
+      </div>
+    </li>
+    <li id="captureWindowItem" class="menuI" onclick="toDo('capture_window');">
+      <div class="menu" id="captureWindow"
+        style="background-image: url(images/screen.png);">
+        <span class="text" id="captureWindowText"></span>
+        <span class="shortcut" id="captureWindowShortcut">Ctrl+Alt+V</span>
+      </div>
+    </li>
+    <li id="captureWebpageItem" class="menuI" onclick="toDo('capture_webpage');">
+      <div class="menu" id="captureWebpage"
+        style="background-image: url(images/whole.png);">
+        <span class="text" id="captureWebpageText"></span>
+        <span class="shortcut" id="captureWebpageShortcut">Ctrl+Alt+H</span>
+      </div>
+    </li>
+    <div class="separator"></div>
+    <li id="captureScreenItem" class="menuI" onclick="toDo('capture_screen');">
+      <div class="menu" id="captureScreen"
+        style="background-image: url(images/region.png);">
+        <span class="text" id="captureScreenText"></span>
+        <span class="shortcut" id="captureScreenShortcut">Ctrl+Alt+C</span>
+      </div>
+    </li>
+  </ul>
   </div>
 </body>
 </html>
