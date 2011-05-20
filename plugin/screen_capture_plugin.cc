@@ -17,7 +17,6 @@ extern Log g_logger;
 
 #ifdef _WINDOWS
 int ScreenCapturePlugin::keycode_ = 0;
-NativeWindow ScreenCapturePlugin::hotkey_window_ = NULL;
 #endif
 
 NPError ScreenCapturePlugin::Init(NPP instance, uint16_t mode, int16_t argc,
@@ -155,15 +154,9 @@ LRESULT ScreenCapturePlugin::WndProc(HWND hWnd, UINT message,
 
 NPError ScreenCapturePlugin::SetWindow(NPWindow* window) {
 #ifdef _WINDOWS
-  if (hotkey_window_ == NULL && window->window != NULL) {
-    hotkey_window_ = (NativeWindow)window->window;
-  }
-
   if (window->window == NULL && old_proc_ != NULL) {
     SubclassWindow(get_native_window(), old_proc_);
     old_proc_ = NULL;
-    if (get_native_window() == hotkey_window_)
-      hotkey_window_ = NULL;
   }
 
   PluginBase::SetWindow(window);
@@ -190,17 +183,19 @@ void ScreenCapturePlugin::SetButtonMessage(WCHAR* ok_caption,
 }
 
 bool ScreenCapturePlugin::SetHotKey(int keycode) {
-  if (hotkey_window_) {
+  if (get_native_window()) {
     std::string hotkey = "CTRL+ALT+";
     ATOM atom;
     if (keycode_ != 0) {
       hotkey += keycode_;
       atom = GlobalFindAtomA(hotkey.c_str());
-      UnregisterHotKey(hotkey_window_, atom);
+      UnregisterHotKey(get_native_window(), atom);
     }
+    hotkey = "CTRL+ALT+";
     hotkey += keycode;
     atom = GlobalAddAtomA(hotkey.c_str());
-    if (RegisterHotKey(hotkey_window_, atom, MOD_CONTROL | MOD_ALT, keycode)) {
+    if (RegisterHotKey(get_native_window(), atom, 
+                       MOD_CONTROL | MOD_ALT, keycode)) {
       keycode_ = keycode;
       return true;
     }

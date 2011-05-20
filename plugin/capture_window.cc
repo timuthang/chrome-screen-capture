@@ -261,10 +261,17 @@ void CaptureWindow::DrawSelectRegion(POINT pt, bool compulte_select_region) {
   FillRect(mem_dc_, &right_bottom_corner_, blue_brush);
 
   if (!IsRectEmpty(&selected_rect_)) {
-    HFONT font = CreateFont(16, 8, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, 
+    int height = -MulDiv(10, GetDeviceCaps(mem_dc_, LOGPIXELSY), 72);
+
+    HFONT font = CreateFont(height, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, 
                             DEFAULT_CHARSET, OUT_STROKE_PRECIS, 
                             CLIP_STROKE_PRECIS, PROOF_QUALITY, 
                             VARIABLE_PITCH | FF_SWISS, _T("Arial"));
+    if (!font)
+      font = CreateFont(height, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,  
+                        DEFAULT_CHARSET, OUT_STROKE_PRECIS, 
+                        CLIP_STROKE_PRECIS, PROOF_QUALITY, 
+                        VARIABLE_PITCH | FF_SWISS, NULL);
     HFONT old_font = (HFONT)SelectObject(mem_dc_, font);
 
     // Draw tip message.
@@ -294,6 +301,13 @@ void CaptureWindow::DrawSelectRegion(POINT pt, bool compulte_select_region) {
     SetTextColor(mem_dc_, RGB(255, 255, 255));
     DrawText(mem_dc_, message, _tcslen(message), &rect, DT_CENTER);
 
+    SelectObject(mem_dc_, old_font);
+    DeleteObject(font);
+    font = CreateFont(height, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,  
+                      DEFAULT_CHARSET, OUT_STROKE_PRECIS, 
+                      CLIP_STROKE_PRECIS, PROOF_QUALITY, 
+                      VARIABLE_PITCH | FF_SWISS, NULL);
+    old_font = (HFONT)SelectObject(mem_dc_, font);
     // Draw button
     int button_width = 0;
     int button_height = 0;
