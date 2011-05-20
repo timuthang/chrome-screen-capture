@@ -721,7 +721,8 @@ bool ScreenCaptureScriptObject::SetHotKey(const NPVariant* args,
 #ifdef _WINDOWS
   int keycode = NPVARIANT_IS_DOUBLE(args[0]) ? NPVARIANT_TO_DOUBLE(args[0]) :
       NPVARIANT_TO_INT32(args[0]);
-  bool ret = ScreenCapturePlugin::SetHotKey(keycode);
+  ScreenCapturePlugin* plugin = (ScreenCapturePlugin*)get_plugin();
+  bool ret = plugin->SetHotKey(keycode);
   BOOLEAN_TO_NPVARIANT(ret, *result);
 #endif
 

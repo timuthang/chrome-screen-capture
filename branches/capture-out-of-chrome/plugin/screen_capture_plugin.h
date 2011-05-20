@@ -30,7 +30,7 @@ public:
 
 #ifdef _WINDOWS
   void SetButtonMessage(WCHAR* ok_caption, WCHAR* cancel_caption);
-  static bool SetHotKey(int keycode);
+  bool SetHotKey(int keycode);
   static LRESULT WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 #endif
 
@@ -39,7 +39,6 @@ private:
 #ifdef _WINDOWS
   WNDPROC old_proc_;
   static int keycode_;
-  static NativeWindow hotkey_window_;
 #endif
 };
 
