@@ -401,12 +401,12 @@ var UploadUI = {
           Account.addUser(siteId, user);
           UploadUI.addAuthenticatedAccount(siteId, userId);
         }
-        UploadUI.hideAuthenticationProgress();
         UploadUI.upload(siteId, userId);
       } else {
         var msg = chrome.i18n.getMessage(userOrMessage);
         UploadUI.showErrorInfo(msg);
       }
+      UploadUI.hideAuthenticationProgress();
     });
   },
 
@@ -424,7 +424,7 @@ var UploadUI = {
 
 (function() {
 // Cache tab id of edit page, so that we can get tab focus after getting access
-// token
+// token.
 var tabIdOfEditPage;
 chrome.tabs.getSelected(null, function(tab) {
   tabIdOfEditPage = tab.id;
