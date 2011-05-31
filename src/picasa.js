@@ -32,15 +32,23 @@
     parseRedirectUrl: function(url) {
       var result = false;
       if (url.indexOf(REDIRECT_URI) == 0) {
-        var accessTokenRegexp = /^access_token=(.+)&expires_in=(\d+)$/;
         var hash = url.split('#')[1];
         if (hash) {
-          var match = accessTokenRegexp.exec(hash);
-          if (match) {
+          var params = hash.split('&');
+          var paramMap = {};
+          params.forEach(function(param) {
+            paramMap[param.split('=')[0]] = param.split('=')[1];
+          });
+
+          var accessToken = paramMap['access_token'];
+          var expires = paramMap['expires_in'];
+          if (accessToken && expires) {
             result = {
-              accessToken: match[1],
-              expires: match[2]
+              accessToken: accessToken,
+              expires: expires
             };
+          } else {
+            result = 'bad_redirect_url'; // Should never happened.
           }
         } else {
           var search = url.split('?')[1];
@@ -83,14 +91,16 @@
           user.name = userName;
           
           var albums = res.feed.entry;
-          var length = albums.length;
+          if (albums) {
+            var length = albums.length;
 
-          // Check if user has created album "Screen Capture".
-          for (var i = 0; i < length; i++) {
-            var albumName = albums[i].title.$t;
-            if (albumName == ALBUM_NAME) {
-              user.albumId = albums[i].gphoto$id.$t;
-              break;
+            // Check if user has created album "Screen Capture".
+            for (var i = 0; i < length; i++) {
+              var albumName = albums[i].title.$t;
+              if (albumName == ALBUM_NAME) {
+                user.albumId = albums[i].gphoto$id.$t;
+                break;
+              }
             }
           }
 
