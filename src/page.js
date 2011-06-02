@@ -31,6 +31,7 @@ var page = {
   fixedElements_ : [],
   marginTop: 0,
   marginLeft: 0,
+  modifiedBottomRightFixedElements: [],
 
   hookBodyScrollValue: function(needHook) {
     document.documentElement.setAttribute(
@@ -40,35 +41,195 @@ var page = {
     document.documentElement.dispatchEvent(event);
   },
 
-  enableFixedPosition: function(enableFlag) {
-    if (enableFlag) {
-      for (var i = 0, l = this.fixedElements_.length; i < l; ++i) {
-        this.fixedElements_[i].style.position = "fixed";
-      }
-    } else {
-      this.fixedElements_ = [];
-      var nodeIterator = document.createNodeIterator(
-          document.documentElement,
-          NodeFilter.SHOW_ELEMENT,
-          null,
-          false
-      );
-      var currentNode;
-      while (currentNode = nodeIterator.nextNode()) {
-        var nodeComputedStyle =
-            document.defaultView.getComputedStyle(currentNode, "");
-        // Skip nodes which don't have computeStyle or are invisible.
-        if (!nodeComputedStyle)
-          return;
-        var nodePosition = nodeComputedStyle.getPropertyValue("position");
-        if (nodePosition == "fixed") {
-          this.fixedElements_.push(currentNode);
-          currentNode.style.position = "absolute";
-        }
+  /**
+   * Determine if the page scrolled to bottom or right.
+   */
+  isScrollToPageEnd: function(coordinate) {
+    var body = document.body;
+    var docElement = document.documentElement;
+    if (coordinate == 'x')
+      return docElement.clientWidth + body.scrollLeft == body.scrollWidth;
+    else if (coordinate == 'y')
+      return docElement.clientHeight + body.scrollTop == body.scrollHeight;
+  },
+
+  /**
+   * Detect if the view port is located to the corner of page.
+   */
+  detectPagePosition: function() {
+    var body = document.body;
+    var pageScrollTop = body.scrollTop;
+    var pageScrollLeft = body.scrollLeft;
+    if (pageScrollTop == 0 && pageScrollLeft == 0) {
+      return 'top_left';
+    } else if (pageScrollTop == 0 && this.isScrollToPageEnd('x')) {
+      return 'top_right';
+    } else if (this.isScrollToPageEnd('y') && pageScrollLeft == 0) {
+      return 'bottom_left';
+    } else if (this.isScrollToPageEnd('y') && this.isScrollToPageEnd('x')) {
+      return 'bottom_right';
+    }
+    return null;
+  },
+
+  /**
+   * Detect fixed-positioned element's position in the view port.
+   * @param {Element} elem
+   * @return {String|Object} Return position of the element in the view port:
+   *   top_left, top_right, bottom_left, bottom_right, or null.
+   */
+  detectCapturePositionOfFixedElement: function(elem) {
+    var docElement = document.documentElement;
+    var viewPortWidth = docElement.clientWidth;
+    var viewPortHeight = docElement.clientHeight;
+    var offsetWidth = elem.offsetWidth;
+    var offsetHeight = elem.offsetHeight;
+    var offsetTop = elem.offsetTop;
+    var offsetLeft = elem.offsetLeft;
+    var result = [];
+
+    // Compare distance between element and the edge of view port to determine
+    // the capture position of element.
+    if (offsetTop <= viewPortHeight - offsetTop - offsetHeight) {
+      result.push('top');
+    } else if (offsetTop < viewPortHeight) {
+      result.push('bottom');
+    }
+    if (offsetLeft <= viewPortWidth - offsetLeft - offsetWidth) {
+      result.push('left');
+    } else if (offsetLeft < viewPortWidth) {
+      result.push('right');
+    }
+
+    // If the element is out of view port, then ignore.
+    if (result.length != 2)
+      return null;
+    return result.join('_');
+  },
+
+  restoreFixedElements: function() {
+    this.fixedElements_.forEach(function(element) {
+      element[1].style.visibility = 'visible';
+    });
+    this.fixedElements_ = [];
+  },
+
+  /**
+   * Iterate DOM tree and cache visible fixed-position elements.
+   */
+  cacheVisibleFixedPositionedElements: function() {
+    var nodeIterator = document.createNodeIterator(
+        document.documentElement,
+        NodeFilter.SHOW_ELEMENT,
+        null,
+        false
+    );
+    var currentNode;
+    while (currentNode = nodeIterator.nextNode()) {
+      var nodeComputedStyle =
+          document.defaultView.getComputedStyle(currentNode, "");
+      // Skip nodes which don't have computeStyle or are invisible.
+      if (!nodeComputedStyle)
+        continue;
+      if (nodeComputedStyle.position == "fixed" &&
+          nodeComputedStyle.display != 'none' &&
+          nodeComputedStyle.visibility != 'hidden') {
+        var position =
+          this.detectCapturePositionOfFixedElement(currentNode);
+        if (position)
+          this.fixedElements_.push([position, currentNode]);
       }
     }
   },
 
+  // Handle fixed-position elements for capture.
+  handleFixedElements: function(capturePosition) {
+    var docElement = document.documentElement;
+    var body = document.body;
+
+    // If page has no scroll bar, then return directly.
+    if (docElement.clientHeight == body.scrollHeight &&
+        docElement.clientWidth == body.scrollWidth)
+      return;
+    
+    if (!this.fixedElements_.length) {
+      this.cacheVisibleFixedPositionedElements();
+    }
+
+    this.fixedElements_.forEach(function(element) {
+      if (element[0] == capturePosition)
+        element[1].style.visibility = 'visible';
+      else
+        element[1].style.visibility = 'hidden';
+    });
+  },
+
+  handleSecondToLastCapture: function() {
+    var docElement = document.documentElement;
+    var body = document.body;
+    var bottomPositionElements = [];
+    var rightPositionElements = [];
+    var that = this;
+    this.fixedElements_.forEach(function(element) {
+      var position = element[0];
+      if (position == 'bottom_left' || position == 'bottom_right') {
+        bottomPositionElements.push(element[1]);
+      } else if (position == 'bottom_right' || position == 'top_right') {
+        rightPositionElements.push(element[1]);
+      }
+    });
+
+    // Determine if the current capture is last but one.
+    var remainingCaptureHeight = body.scrollHeight - docElement.clientHeight -
+      body.scrollTop;
+    if (remainingCaptureHeight > 0 &&
+        remainingCaptureHeight < docElement.clientHeight) {
+      bottomPositionElements.forEach(function(element) {
+        if (element.offsetHeight > remainingCaptureHeight) {
+          element.style.visibility = 'visible';
+          var originalBottom = window.getComputedStyle(element).bottom;
+          that.modifiedBottomRightFixedElements.push(
+            ['bottom', element, originalBottom]);
+          element.style.bottom = -remainingCaptureHeight + 'px';
+        }
+      });
+    }
+
+    var remainingCaptureWidth = body.scrollWidth - docElement.clientWidth -
+      body.scrollLeft;
+    if (remainingCaptureWidth > 0 &&
+        remainingCaptureWidth < docElement.clientWidth) {
+      rightPositionElements.forEach(function(element) {
+        if (element.offsetWidth > remainingCaptureWidth) {
+          element.style.visibility = 'visible';
+          var originalRight = window.getComputedStyle(element).right;
+          that.modifiedBottomRightFixedElements.push(
+            ['right', element, originalRight]);
+          element.style.right = -remainingCaptureWidth + 'px';
+        }
+      });
+    }
+  },
+
+  restoreBottomRightOfFixedPositionElements: function() {
+    this.modifiedBottomRightFixedElements.forEach(function(data) {
+      var property = data[0];
+      var element = data[1];
+      var originalValue = data[2];
+      element.style[property] = originalValue;
+    });
+    this.modifiedBottomRightFixedElements = [];
+  },
+  
+  hideAllFixedPositionedElements: function() {
+    this.fixedElements_.forEach(function(element) {
+      element[1].style.visibility = 'hidden';
+    });
+  },
+
+  /**
+   * Check if the page is only made of invisible embed elements.
+   */
   checkPageIsOnlyEmbedElement: function() {
     var bodyNode = document.body.children;
     var isOnlyEmbed = false;
@@ -105,7 +266,7 @@ var page = {
       switch (request.msg) {
         case 'capture_window': response(page.getWindowSize()); break;
         case 'show_selection_area': page.showSelectionArea(); break;
-        case 'scroll_init':
+        case 'scroll_init': // Capture whole page.
           response(page.scrollInit(
               0, 0, document.width, document.height, 'captureWhole'));
           break;
@@ -134,13 +295,15 @@ var page = {
   * Initialize scrollbar position, and get the data browser
   */
   scrollInit: function(startX, startY, canvasWidth, canvasHeight, type) {
-    this.enableFixedPosition(false);
     this.hookBodyScrollValue(true);
     page.captureHeight = canvasHeight;
     page.captureWidth = canvasWidth;
     var docWidth = document.width;
     var docHeight = document.height;
     window.scrollTo(startX, startY);
+
+    this.handleFixedElements('top_left');
+    this.handleSecondToLastCapture();
 
     var hostName = window.location.hostname;
     if (page.isGMailPage() && type == 'captureWhole') {
@@ -180,10 +343,20 @@ var page = {
       page.scrollYCount = 0;
     }
     if (page.scrollXCount * page.visibleHeight < page.captureHeight) {
+      this.restoreBottomRightOfFixedPositionElements();
       var doc = document.documentElement;
       window.scrollTo(
           page.scrollYCount * doc.clientWidth + page.scrollX,
           page.scrollXCount * doc.clientHeight + page.scrollY);
+
+      var pagePosition = this.detectPagePosition();
+      if (pagePosition) {
+        this.handleFixedElements(pagePosition);
+      } else {
+        this.hideAllFixedPositionedElements();
+      }
+      this.handleSecondToLastCapture();
+
       if (page.isGMailPage()) {
         var frame = document.getElementById('canvas_frame');
         frame.contentDocument.body.scrollLeft =
@@ -197,7 +370,7 @@ var page = {
       return { msg: 'scroll_next_done',scrollXCount: x, scrollYCount: y };
     }  else {
       window.scrollTo(page.startX, page.startY);
-      this.enableFixedPosition(true);
+      this.restoreFixedElements();
       this.hookBodyScrollValue(false);
       return {'msg': 'scroll_finished'};
     }
@@ -256,19 +429,23 @@ var page = {
   */
   createSelectionArea: function() {
     var areaProtector = $('sc_drag_area_protector'); 
-    var body_style = window.getComputedStyle(document.body,null);
-    if ('relative' == body_style['position']) {
-      page.marginTop = page.matchMarginValue(body_style['marginTop']);
-      page.marginLeft = page.matchMarginValue(body_style['marginLeft']);
+    var bodyStyle = window.getComputedStyle(document.body, null);
+    if ('relative' == bodyStyle['position']) {
+      page.marginTop = page.matchMarginValue(bodyStyle['marginTop']);
+      page.marginLeft = page.matchMarginValue(bodyStyle['marginLeft']);
       areaProtector.style.top =  - parseInt(page.marginTop) + 'px';
-      areaProtector.style.left =  - parseInt(page.marginLeft) + 'px';    
-    }    
-    areaProtector.style.width = (document.width + parseInt(page.marginLeft)) + 'px';
-    areaProtector.style.height = (document.height + parseInt(page.marginTop)) + 'px';
+      areaProtector.style.left =  - parseInt(page.marginLeft) + 'px';
+    }
+    areaProtector.style.width = (document.width + parseInt(page.marginLeft)) +
+      'px';
+    areaProtector.style.height = (document.height + parseInt(page.marginTop)) +
+      'px';
     areaProtector.onclick = function() {
-    event.stopPropagation();
-    return false;
+      event.stopPropagation();
+      return false;
     };
+
+    // Create elements for area capture.
     page.createDiv(areaProtector, 'sc_drag_shadow_top');
     page.createDiv(areaProtector, 'sc_drag_shadow_bottom');
     page.createDiv(areaProtector, 'sc_drag_shadow_left');
@@ -278,9 +455,12 @@ var page = {
     page.createDiv(areaElement, 'sc_drag_container');
     page.createDiv(areaElement, 'sc_drag_size');
 
+    // Add event listener for 'cancel' and 'capture' button.
     var cancel = page.createDiv(areaElement, 'sc_drag_cancel');
-    cancel.addEventListener('mousedown', function (){
-        page.removeSelectionArea();}, true);
+    cancel.addEventListener('mousedown', function () {
+      // Remove area capture containers and event listeners.
+      page.removeSelectionArea();
+    }, true);
     cancel.innerHTML = chrome.i18n.getMessage("cancel");
 
     var crop = page.createDiv(areaElement, 'sc_drag_crop');
@@ -455,14 +635,14 @@ var page = {
 
         }
         var crop = document.getElementById('sc_drag_crop');
-          var cancel = document.getElementById('sc_drag_cancel');
-          if (event.pageY + 25 > document.height) {
-            crop.style.bottom = 0;
-            cancel.style.bottom = 0
-          } else {
-            crop.style.bottom = '-25px';
-            cancel.style.bottom = '-25px';
-          }
+        var cancel = document.getElementById('sc_drag_cancel');
+        if (event.pageY + 25 > document.height) {
+          crop.style.bottom = 0;
+          cancel.style.bottom = 0
+        } else {
+          crop.style.bottom = '-25px';
+          cancel.style.bottom = '-25px';
+        }
         page.updateShadow(areaElement);
         page.updateSize();
 
@@ -608,9 +788,12 @@ var page = {
   }
 };
 
-isPageCapturable = function() {
+/**
+ * Indicate if the current page can be captured.
+ */
+var isPageCapturable = function() {
   return !page.checkPageIsOnlyEmbedElement();
-}
+};
 
 function $(id) {
   return document.getElementById(id);
