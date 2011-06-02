@@ -8,22 +8,42 @@
 </head>
 <body>
 <embed id="pluginObj" type="application/x-screencapture">
+<script src="hotkey_storage.js"></script>
 <script>
 var plugin = {
   pluginObj: document.getElementById('pluginObj'),
+
   autoSave: function(data, title, path) {
     return this.pluginObj.AutoSave(data, title, path);
   },
+
   openSavePath : function(path) {
     this.pluginObj.OpenSavePath(path);
   },
+
   getDefaultSavePath: function() {
     return this.pluginObj.GetDefaultSavePath();
   },
+
   saveToClipboard: function(data) {
     return this.pluginObj.SaveToClipboard(data);
+  },
+
+  captureScreen: function() {
+    this.pluginObj.CaptureScreen();
+  },
+
+  setButtonCaption: function() {
+    var ok = chrome.i18n.getMessage('ok');
+    var cancel = chrome.i18n.getMessage('cancel');
+    if (this.pluginObj.SetButtonMessage)
+      this.pluginObj.SetButtonMessage(ok, cancel);
+  },
+
+  setHotKey: function(keyCode) {
+    return this.pluginObj.SetHotKey(keyCode);
   }
-}
+};
 
 var screenshot = {
   tab: 0,
@@ -42,29 +62,51 @@ var screenshot = {
   scrollBarY: 17,
   captureStatus: true,
 
+  handleHotKey: function(keyCode) {
+    if (HotKey.isEnabled()) {
+      switch(keyCode) {
+      case HotKey.getCharCode('area'):
+        screenshot.showSelectionArea();
+        break;
+      case HotKey.getCharCode('viewport'):
+        screenshot.captureWindow();
+        break;
+      case HotKey.getCharCode('fullpage'):
+        screenshot.captureWebpage();
+        break;
+      case HotKey.getCharCode('screen'):
+        screenshot.captureScreen();
+        break
+      }
+    }
+  },
+  
   /**
   * Receive messages from content_script, and then decide what to do next
   */
   addMessageListener: function() {
     chrome.extension.onRequest.addListener(function(request, sender, response) {
       var obj = request;
-      var isShortcut =  eval(localStorage.settingShortcut);
+      var hotKeyEnabled =  HotKey.isEnabled();
       switch(obj.msg) {
+        case 'capture_hot_key':
+          screenshot.handleHotKey(obj.keyCode);
+          break;
         case 'capture_selected':
           screenshot.captureSelected();
           break;
         case 'capture_window':
-          if (isShortcut) {
+          if (hotKeyEnabled) {
             screenshot.captureWindow();
-          } 
+          }
           break;
         case 'capture_area':
-          if (isShortcut) {
+          if (hotKeyEnabled) {
             screenshot.showSelectionArea();
           }
           break;
         case 'capture_webpage':
-          if (isShortcut) {
+          if (hotKeyEnabled) {
             screenshot.captureWebpage();
           }
           break;
@@ -85,6 +127,10 @@ var screenshot = {
     screenshot.sendMessage({msg: 'show_selection_area'}, null);
   },
 
+  captureScreen: function() {
+    plugin.captureScreen();
+  },
+  
   captureWindow: function() {
     screenshot.sendMessage({msg: 'capture_window'},
         screenshot.onResponseVisibleSize);
@@ -133,7 +179,8 @@ var screenshot = {
 
   captureSpecialPage: function() {
     var formatParam  = localStorage.screenshootQuality || 'png';
-    chrome.tabs.captureVisibleTab(null, {format: formatParam, quality: 50}, function(data) {
+    chrome.tabs.captureVisibleTab(
+        null, {format: formatParam, quality: 50}, function(data) {
       var image = new Image();
       image.onload = function() {
         screenshot.canvas.width = image.width;
@@ -145,6 +192,18 @@ var screenshot = {
       image.src = data;
     });
   },
+  
+  captureScreenCallback: function(data) {
+    var image = new Image();
+    image.onload = function() {
+      screenshot.canvas.width = image.width;
+      screenshot.canvas.height = image.height;
+      var context = screenshot.canvas.getContext("2d");
+      context.drawImage(image, 0, 0);
+      screenshot.postImage();
+    };
+    image.src = "data:image/bmp;base64," + data;
+  },
 
   /**
   * Use drawImage method to slice parts of a source image and draw them to
@@ -153,7 +212,8 @@ var screenshot = {
   capturePortion: function(x, y, width, height,
                            visibleWidth, visibleHeight, docWidth, docHeight) {
     var formatParam  = localStorage.screenshootQuality || 'png';
-    chrome.tabs.captureVisibleTab(null, {format: formatParam, quality: 50}, function(data) {
+    chrome.tabs.captureVisibleTab(
+        null, {format: formatParam, quality: 50}, function(data) {
       var image = new Image();
       image.onload = function() {
         var curHeight = image.width < docWidth ?
@@ -175,7 +235,8 @@ var screenshot = {
 
   captureVisible: function(docWidth, docHeight) {
     var formatParam  = localStorage.screenshootQuality || 'png';
-    chrome.tabs.captureVisibleTab(null, {format: formatParam, quality: 50}, function(data) {
+    chrome.tabs.captureVisibleTab(
+        null, {format: formatParam, quality: 50}, function(data) {
       var image = new Image();
       image.onload = function() {
         var width = image.height < docHeight ?
@@ -197,17 +258,22 @@ var screenshot = {
   */
   captureAndScroll: function() {
     var formatParam  = localStorage.screenshootQuality || 'png';
-    chrome.tabs.captureVisibleTab(null, {format: formatParam, quality: 50}, function(data) {
+    chrome.tabs.captureVisibleTab(
+        null, {format: formatParam, quality: 50}, function(data) {
       var image = new Image();
       image.onload = function() {
         var context = screenshot.canvas.getContext('2d');
         var width = 0;
         var height = 0;
-        screenshot.scrollBarY = screenshot.visibleHeight < screenshot.docHeight ? 17 : 0;
-        screenshot.scrollBarX = screenshot.visibleWidth < screenshot.docWidth ? 17 : 0;
-        var visibleWidth = (image.width - screenshot.scrollBarY < screenshot.canvas.width ?
+        screenshot.scrollBarY = 
+            screenshot.visibleHeight < screenshot.docHeight ? 17 : 0;
+        screenshot.scrollBarX = 
+            screenshot.visibleWidth < screenshot.docWidth ? 17 : 0;
+        var visibleWidth = 
+            (image.width - screenshot.scrollBarY < screenshot.canvas.width ?
             image.width - screenshot.scrollBarY : screenshot.canvas.width) ;
-        var visibleHeight = (image.height - screenshot.scrollBarX < screenshot.canvas.height ?
+        var visibleHeight = 
+            (image.height - screenshot.scrollBarX < screenshot.canvas.height ?
             image.height - screenshot.scrollBarX : screenshot.canvas.height);
         var x1 = screenshot.startX - screenshot.scrollX;
         var x2 = 0;
@@ -224,11 +290,12 @@ var screenshot = {
         if ((screenshot.scrollXCount + 1) * visibleHeight >
             screenshot.canvas.height) {
           height = screenshot.canvas.height % visibleHeight;
-          if ((screenshot.scrollXCount + 1) * visibleHeight + screenshot.scrollY < screenshot.docHeight) {
+          if ((screenshot.scrollXCount + 1) * visibleHeight + 
+              screenshot.scrollY < screenshot.docHeight) {
             y1 = 0;
           } else {
-            y1 = (screenshot.scrollXCount + 1) * visibleHeight + screenshot.scrollY -
-                screenshot.docHeight ;
+            y1 = (screenshot.scrollXCount + 1) * visibleHeight + 
+                screenshot.scrollY - screenshot.docHeight ;
           }
 
         } else {
@@ -294,15 +361,17 @@ var screenshot = {
       }
     });
   },
-  
+
   init: function() {
+    plugin.setButtonCaption();
     var savePath = plugin.getDefaultSavePath();
     localStorage.savePath = localStorage.savePath ?
         localStorage.savePath : savePath;
-    localStorage.settingShortcut = localStorage.settingShortcut || true;
     localStorage.screenshootQuality = localStorage.screenshootQuality || 'png';
     screenshot.executeScriptsInExistingTabs();
     screenshot.addMessageListener();
+
+    HotKey.setup(plugin);
   }
 };
 

@@ -20,6 +20,7 @@
 
 #include "log.h"
 #include "screen_capture_plugin.h"
+#include "utils.h"
 
 #ifdef _WINDOWS
 using namespace Gdiplus;
@@ -76,6 +77,18 @@ void ScreenCaptureScriptObject::InitHandler() {
   item.function_name = "PrintImage";
   item.function_pointer = ON_INVOKEHELPER(
       &ScreenCaptureScriptObject::PrintImage);
+  AddFunction(item);
+  item.function_name = "CaptureScreen";
+  item.function_pointer = ON_INVOKEHELPER(
+      &ScreenCaptureScriptObject::CaptureScreen);
+  AddFunction(item);
+  item.function_name = "SetButtonMessage";
+  item.function_pointer = ON_INVOKEHELPER(
+      &ScreenCaptureScriptObject::SetButtonMessage);
+  AddFunction(item);
+  item.function_name = "SetHotKey";
+  item.function_pointer = ON_INVOKEHELPER(
+      &ScreenCaptureScriptObject::SetHotKey);
   AddFunction(item);
 }
 
@@ -937,6 +950,54 @@ bool ScreenCaptureScriptObject::SaveScreenshot(
       get_plugin()->get_npp(), callback,
       file.empty() || SaveFileBase64(file.c_str(), base64, base64size),
       file.c_str());
+#endif
+
+  return true;
+}
+
+bool ScreenCaptureScriptObject::CaptureScreen(const NPVariant* args, 
+                                              uint32_t argCount, 
+                                              NPVariant* result) {
+  ScreenCapturePlugin* plugin = (ScreenCapturePlugin*)get_plugin();
+  if (plugin)
+    plugin->CaptureScreen();
+  return true;
+}
+
+bool ScreenCaptureScriptObject::SetButtonMessage(const NPVariant* args, 
+                                                 uint32_t argCount, 
+                                                 NPVariant* result) {
+  if (argCount != 2 || !NPVARIANT_IS_STRING(args[0]) ||
+      !NPVARIANT_IS_STRING(args[1]))
+    return false;
+  
+#ifdef _WINDOWS
+  utils::Utf8ToUnicode ok_caption(NPVARIANT_TO_STRING(args[0]).UTF8Characters);
+  utils::Utf8ToUnicode cancel_caption(
+      NPVARIANT_TO_STRING(args[1]).UTF8Characters);
+
+  ScreenCapturePlugin* plugin = (ScreenCapturePlugin*)get_plugin();
+  if (plugin)
+    plugin->SetButtonMessage(ok_caption, cancel_caption);
+#endif
+  return true;
+}
+
+bool ScreenCaptureScriptObject::SetHotKey(const NPVariant* args, 
+                                          uint32_t argCount, 
+                                          NPVariant* result) {
+  if (argCount != 1 || 
+      (!NPVARIANT_IS_INT32(args[0]) && !NPVARIANT_IS_DOUBLE(args[0])))
+    return false;
+
+  BOOLEAN_TO_NPVARIANT(false, *result);
+
+#ifdef _WINDOWS
+  int keycode = NPVARIANT_IS_DOUBLE(args[0]) ? NPVARIANT_TO_DOUBLE(args[0]) :
+      NPVARIANT_TO_INT32(args[0]);
+  ScreenCapturePlugin* plugin = (ScreenCapturePlugin*)get_plugin();
+  bool ret = plugin->SetHotKey(keycode);
+  BOOLEAN_TO_NPVARIANT(ret, *result);
 #endif
 
   return true;

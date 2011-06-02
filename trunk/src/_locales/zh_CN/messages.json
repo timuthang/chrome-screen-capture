@@ -2,8 +2,9 @@
   "name": {"message": "网页截图（由Google提供）"},
   "description": {"message": "截取网页为图片，支持窗口截图，区域截图和整个网页截图三种方式。支持水平和垂直翻页截取超大网页，新版引进自动截图保存功能。"},
   "default_title": {"message": "网页截图"},
-  "capture_window": {"message": "可视区域截图"},
-  "capture_area": {"message": "定制区域截图"},
+  "capture_screen": {"message": "屏幕区域截图"},
+  "capture_window": {"message": "可视网页截图"},
+  "capture_area": {"message": "网页区域截图"},
   "capture_webpage": {"message": "整张网页截图"},
   "special": {"message": "此页面是特殊页面，无法进行截图。"},
   "loading": {"message": "页面正在加载，请稍等。"},
@@ -75,11 +76,12 @@
   "user_denied": {"message": "用户拒绝。"},
   "user_authentication_tip": {"message": "用户认证中，请稍候..."},
   "user_logout_tip": {"message": "用户注销中，请稍候..."},
+  "failed_to_register_hot_key_for_screen_capture": {"message": "屏幕区域截图快捷键已被其他应用程序占用，请重新定义。"},
+  "hot_key_conflict": {"message": "快捷键冲突。"},
   "failure_to_create_album": {"message": "相册创建失败，请稍候再试。"},
   "failed_to_upload_image": {"message": "图片上传失败，请稍候再试。"},
   "failed_to_get_photo_link": {"message": "获取图片链接失败。"},
   "picasa_upload_header": {"message": "分享到Picasa Web"},
   "share_to_picasa_account": {"message": "分享到你的 Picasa Web 账号"},
   "invalid_album_id": {"message": "相册不存在。"}
-
 }
