@@ -93,7 +93,7 @@ var __screenCapturePageContext__ = {
 // After createing the wrapper object, you can use watch method to monitor any
 // property which you want to know when it has been read(get) or change(set).
 // Please see the detail comment on method watch.
-// Remember the ObjectWrapDelegate returns the wrapDelegateObject intead of
+// Remember the ObjectWrapDelegate returns the wrapDelegateObject instead of
 // really wrapper object. You have to use ObjectWrapDelegate.getWrapper to get
 // real wrapper object.
 // parameter @originalObject, object which you want to wrap
