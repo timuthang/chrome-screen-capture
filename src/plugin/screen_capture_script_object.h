@@ -45,7 +45,21 @@ public:
   // Save the picture to clipboard.
   bool SaveToClipboard(const NPVariant* args, uint32_t argCount,
                        NPVariant* result);
+
+  // Print image
   bool PrintImage(const NPVariant* args, uint32_t argCount, NPVariant* result);
+
+  // Capture screen.
+  bool CaptureScreen(const NPVariant* args, uint32_t argCount,
+                     NPVariant* result);
+
+  // Set i18n button message for displaying in capture procedure.
+  bool SetButtonMessage(const NPVariant* args, uint32_t argCount,
+                        NPVariant* result);
+
+  // Set hot key.
+  bool SetHotKey(const NPVariant* args, uint32_t argCount,
+                 NPVariant* result);
 
   void InitHandler();
 

@@ -42,9 +42,9 @@
 #sc_drag_size {
   background-color:#444444;
   color:#ffffff;
-  font-family: verdana;
+  font-family: arial,san-serif;
   font-weight:bold;
-  font-size:10px;
+  font-size:12px;
   height:18px;
   min-width:65px !important;
   left:12px;
@@ -60,8 +60,8 @@
   background:#000000;
   cursor:pointer;
   color:#ffffff;
-  font-size:10px;
-  font-family: verdana;
+  font-size:12px;
+  font-family: arial,san-serif;
   font-weight:bold;
   height:22px;
   line-height:22px;

@@ -230,7 +230,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="comsupp.lib comsuppwd.lib"
+				AdditionalDependencies="comsupp.lib comsuppwd.lib msimg32.lib"
 				ShowProgress="0"
 				OutputFile="$(ProjectDir)\$(ProjectName).dll"
 				LinkIncremental="2"
@@ -344,6 +344,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\capture_window.cc"
+				>
+			</File>
+			<File
 				RelativePath=".\log.cc"
 				>
 			</File>
@@ -403,6 +407,10 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
+			<File
+				RelativePath=".\capture_window.h"
+				>
+			</File>
 			<File
 				RelativePath=".\log.h"
 				>
