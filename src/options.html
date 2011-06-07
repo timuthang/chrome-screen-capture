@@ -135,6 +135,9 @@
     margin: 5px 0 5px 80px;
     color: red;
   }
+  #screen-capture-hot-key-set-wrapper {
+    display: none;
+  }
   </style>
   <script>
   var bg = chrome.extension.getBackgroundPage();
@@ -258,7 +261,7 @@
           <label for="full-page-capture-hot-key" class="capture-text" id="full-page-capture-text"></label>
           <span>Ctrl+Alt+<select id="full-page-capture-hot-key"></select></span>
         </span>
-        <span class="hot-key">
+        <span id="screen-capture-hot-key-set-wrapper" class="hot-key">
           <label for="screen-capture-hot-key" class="capture-text" id="screen-capture-text"></label>
           <span>Ctrl+Alt+<select id="screen-capture-hot-key"></select></span>
         </span>
@@ -277,11 +280,17 @@
     if (CURRENT_LOCALE.indexOf('en') == 0) {
       UI.addStyleSheet('./i18n_styles/en_options.css');
     }
+
+    function isWindowsPlatform() {
+      return navigator.userAgent.toLowerCase().indexOf('windows') > -1;
+    }
+    
     var HotKeySetting = (function() {
       const CHAR_CODE_OF_A = 65;
       const CHAR_CODE_OF_Z = 90;
       var hotKeySelection =
         document.querySelectorAll('#hot-key-setting select');
+      var isWindows = isWindowsPlatform();
 
       var hotkey = {
         setup: function() {
@@ -317,20 +326,30 @@
           }, false);
 
           hotkey.setState(HotKey.isEnabled());
-          if (HotKey.isEnabled() && window.location.hash ==
-              '#failed-to-resister-screen-capture-hot-key') {
-            ErrorInfo.show('failed_to_register_hot_key_for_screen_capture');
-            this.focusScreenCapture();
+          if (isWindows) {
+            // Capture screen region is not support on Linux and Mac platform.
+            $('screen-capture-hot-key-set-wrapper').style.display =
+                'inline-block';
+            if (HotKey.isEnabled() && window.location.hash ==
+                    '#failed-to-resister-screen-capture-hot-key') {
+              ErrorInfo.show('failed_to_register_hot_key_for_screen_capture');
+              this.focusScreenCapture();
+            }
           }
         },
 
         validate: function() {
+          var hotKeyLength = hotKeySelection.length - 1;
           var validateMap = {};
           validateMap[hotKeySelection[0].value] = true;
           validateMap[hotKeySelection[1].value] = true;
           validateMap[hotKeySelection[2].value] = true;
-          validateMap[hotKeySelection[3].value] = true;
-          if (Object.keys(validateMap).length < hotKeySelection.length) {
+          if (isWindows) {
+            validateMap[hotKeySelection[3].value] = true;
+            hotKeyLength += 1;
+          }
+
+          if (Object.keys(validateMap).length < hotKeyLength) {
             ErrorInfo.show('hot_key_conflict');
             return false;
           }
@@ -347,14 +366,16 @@
               HotKey.set('viewport', $('viewport-capture-hot-key').value);
               HotKey.set('fullpage', $('full-page-capture-hot-key').value);
 
-              var screenCaptureHotKey = $('screen-capture-hot-key').value;
-              if (bg.plugin.setHotKey(screenCaptureHotKey.charCodeAt(0))) {
-                HotKey.set('screen', screenCaptureHotKey);
-              } else {
-                var i18nKey = 'failed_to_register_hot_key_for_screen_capture';
-                ErrorInfo.show(i18nKey);
-                this.focusScreenCapture();
-                result = false;
+              if (isWindows) {
+                var screenCaptureHotKey = $('screen-capture-hot-key').value;
+                if (bg.plugin.setHotKey(screenCaptureHotKey.charCodeAt(0))) {
+                  HotKey.set('screen', screenCaptureHotKey);
+                } else {
+                  var i18nKey = 'failed_to_register_hot_key_for_screen_capture';
+                  ErrorInfo.show(i18nKey);
+                  this.focusScreenCapture();
+                  result = false;
+                }
               }
             } else {
               result = false;
