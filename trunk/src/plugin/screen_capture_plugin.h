@@ -26,7 +26,7 @@ public:
   static PluginBase* CreateObject() { return new ScreenCapturePlugin; }
 
   void CaptureScreen();
-  void CaptureScreenCallback(BYTE* image_data, int image_data_len);
+  void CaptureScreenCallback(unsigned char* image_data, int image_data_len);
 
 #ifdef _WINDOWS
   void SetButtonMessage(WCHAR* ok_caption, WCHAR* cancel_caption);

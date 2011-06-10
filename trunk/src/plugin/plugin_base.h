@@ -1,16 +1,16 @@
 #ifndef PLUGIN_BASE_H_
 #define PLUGIN_BASE_H_
 
-#ifndef _WINDOWS
-#include <X11/X.h>
-#endif
-
 #include "npapi.h"
 
 #ifdef _WINDOWS
 typedef HWND NativeWindow;
-#else
+#elif defined GTK
+#include <X11/X.h>
 typedef Window NativeWindow;
+#elif defined MAC
+#include "npapi.h"
+typedef NP_CGContext* NativeWindow;
 #endif
 
 class PluginBase {
