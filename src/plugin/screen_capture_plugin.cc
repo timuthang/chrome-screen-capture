@@ -1,6 +1,9 @@
 #include "screen_capture_plugin.h"
 
+#ifdef _WINDOWS
 #include "capture_window.h"
+#endif
+
 #include "log.h"
 #include "screen_capture_script_object.h"
 #include "script_object_factory.h"
@@ -31,6 +34,29 @@ NPError ScreenCapturePlugin::Init(NPP instance, uint16_t mode, int16_t argc,
 #else
   int bWindowed = 0;
 #endif
+  
+#ifdef MAC
+  // Select the right drawing model if necessary.
+  NPBool support_core_graphics = false;
+  if (NPN_GetValue(instance, NPNVsupportsCoreGraphicsBool,
+                   &support_core_graphics) == NPERR_NO_ERROR && 
+      support_core_graphics)
+    NPN_SetValue(instance, NPPVpluginDrawingModel,
+                 (void*)NPDrawingModelCoreGraphics);
+  else
+    return NPERR_INCOMPATIBLE_VERSION_ERROR;
+  
+  // Select the Cocoa event model.
+  NPBool support_cocoa_events = false;
+  if (NPN_GetValue(instance, NPNVsupportsCocoaBool,
+                   &support_cocoa_events) == NPERR_NO_ERROR &&
+      support_cocoa_events)
+    NPN_SetValue(instance, NPPVpluginEventModel, 
+                 (void*)NPEventModelCocoa);
+  else
+    return NPERR_INCOMPATIBLE_VERSION_ERROR;
+#endif
+  
   NPN_SetValue(instance, NPPVpluginWindowBool, (void *)bWindowed);
   instance->pdata = this;
   return PluginBase::Init(instance, mode, argc, argn, argv, saved);
@@ -203,7 +229,7 @@ bool ScreenCapturePlugin::SetHotKey(int keycode) {
 }
 #endif
 
-void ScreenCapturePlugin::CaptureScreenCallback(BYTE* image_data, 
+void ScreenCapturePlugin::CaptureScreenCallback(unsigned char* image_data, 
                                                 int image_data_len) {
   NPObject* window;
   NPN_GetValue(get_npp(), NPNVWindowNPObject, &window);
