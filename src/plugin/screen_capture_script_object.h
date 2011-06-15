@@ -61,6 +61,10 @@ public:
   bool SetHotKey(const NPVariant* args, uint32_t argCount,
                  NPVariant* result);
 
+  // Get width of view port.
+  bool GetViewPortWidth(const NPVariant* args, uint32_t argCount,
+                        NPVariant* result);
+
   void InitHandler();
 
 private:
