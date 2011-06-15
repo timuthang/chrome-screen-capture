@@ -13,7 +13,7 @@ var HotKey = (function() {
       if (!this.get('fullpage'))
         this.set('fullpage', 'H');
       if (!this.get('screen'))
-        this.set('screen', 'C');
+        this.set('screen', 'P');
 
       var screenCaptureHotKey = this.get('screen');
       if (this.isEnabled() &&
