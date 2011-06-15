@@ -90,6 +90,10 @@ void ScreenCaptureScriptObject::InitHandler() {
   item.function_pointer = ON_INVOKEHELPER(
       &ScreenCaptureScriptObject::SetHotKey);
   AddFunction(item);
+  item.function_name = "GetViewPortWidth";
+  item.function_pointer = ON_INVOKEHELPER(
+    &ScreenCaptureScriptObject::GetViewPortWidth);
+  AddFunction(item);
 }
 
 
@@ -1000,5 +1004,36 @@ bool ScreenCaptureScriptObject::SetHotKey(const NPVariant* args,
   BOOLEAN_TO_NPVARIANT(ret, *result);
 #endif
 
+  return true;
+}
+
+bool ScreenCaptureScriptObject::GetViewPortWidth(const NPVariant* args, 
+                                                 uint32_t argCount, 
+                                                 NPVariant* result) {
+  NULL_TO_NPVARIANT(*result);
+#ifdef _WINDOWS
+  const TCHAR* kChromeClassName = _T("Chrome_WidgetWin_0");
+  HWND chrome_hwnd = FindWindowEx(NULL, NULL, kChromeClassName, NULL);
+  char logs[256];
+  while (chrome_hwnd) {
+    BOOL visible = IsWindowVisible(chrome_hwnd);
+    HWND hwnd = GetParent(chrome_hwnd);
+    sprintf(logs, "chrome_hwnd=%X,IsWindowVisible=%d,GetParent=%X", chrome_hwnd,
+            visible, hwnd);
+    g_logger.WriteLog("GetViewPortWidth", logs);
+    if (chrome_hwnd && hwnd == NULL) {
+      HWND render_window = FindWindowEx(chrome_hwnd, NULL, 
+                                        kChromeClassName, NULL);
+      if (render_window) {
+        RECT render_rect;
+        GetWindowRect(render_window, &render_rect);
+        INT32_TO_NPVARIANT(render_rect.right - render_rect.left, *result);
+        break;
+      }
+    }
+    chrome_hwnd = FindWindowEx(NULL, chrome_hwnd, kChromeClassName, NULL);
+  }
+
+#endif
   return true;
 }
