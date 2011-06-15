@@ -983,6 +983,12 @@ bool ScreenCaptureScriptObject::SetButtonMessage(const NPVariant* args,
   ScreenCapturePlugin* plugin = (ScreenCapturePlugin*)get_plugin();
   if (plugin)
     plugin->SetButtonMessage(ok_caption, cancel_caption);
+#elif GTK
+  const char* ok_caption = NPVARIANT_TO_STRING(args[0]).UTF8Characters;
+  const char* cancel_caption = NPVARIANT_TO_STRING(args[1]).UTF8Characters;
+  ScreenCapturePlugin* plugin = (ScreenCapturePlugin*)get_plugin();
+  if (plugin)
+    plugin->SetButtonMessage(ok_caption, cancel_caption);
 #endif
   return true;
 }
@@ -996,13 +1002,11 @@ bool ScreenCaptureScriptObject::SetHotKey(const NPVariant* args,
 
   BOOLEAN_TO_NPVARIANT(false, *result);
 
-#ifdef _WINDOWS
   int keycode = NPVARIANT_IS_DOUBLE(args[0]) ? NPVARIANT_TO_DOUBLE(args[0]) :
       NPVARIANT_TO_INT32(args[0]);
   ScreenCapturePlugin* plugin = (ScreenCapturePlugin*)get_plugin();
   bool ret = plugin->SetHotKey(keycode);
   BOOLEAN_TO_NPVARIANT(ret, *result);
-#endif
 
   return true;
 }

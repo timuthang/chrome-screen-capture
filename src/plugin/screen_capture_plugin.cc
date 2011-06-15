@@ -1,8 +1,6 @@
 #include "screen_capture_plugin.h"
 
-#ifdef _WINDOWS
-#include "capture_window.h"
-#endif
+#include <string.h>
 
 #include "log.h"
 #include "screen_capture_script_object.h"
@@ -13,14 +11,16 @@
 #include <windowsx.h>
 #include <tchar.h>
 
+#include "capture_window.h"
 #include "resource.h"
+#elif GTK
+#include "capture_linux.h"
+#include "key_binder.h"
 #endif
 
 extern Log g_logger;
 
-#ifdef _WINDOWS
 int ScreenCapturePlugin::keycode_ = 0;
-#endif
 
 NPError ScreenCapturePlugin::Init(NPP instance, uint16_t mode, int16_t argc,
                                    char* argn[],char* argv[], 
@@ -195,9 +195,31 @@ NPError ScreenCapturePlugin::SetWindow(NPWindow* window) {
   return NPERR_NO_ERROR;
 }
 
+#ifdef GTK
+int MyErrorHandler(Display* display, XErrorEvent* error_event) {
+  printf("%ld, type=%ld\n", display, error_event->type);
+}
+
+void GrabKeyHandler(uint keycode, uint modifiers, void* user_data) {
+  ScreenCapturePlugin* plugin = (ScreenCapturePlugin*)user_data;
+  plugin->CaptureScreen();
+}
+#endif
+
 void ScreenCapturePlugin::CaptureScreen() {
 #ifdef _WINDOWS
   PostMessage(get_native_window(), WM_CAPTURESCREEN, 0, 0);
+#elif GTK
+  XSetErrorHandler(MyErrorHandler);
+  CaptureLinux capture;
+  if (capture.CaptureScreen()) {
+    if (capture.Show() == 1) {
+      int image_data_len = 0;
+      unsigned char* image_data = capture.GetImageData(&image_data_len);
+      CaptureScreenCallback(image_data, image_data_len);
+      capture.FreeImageData(image_data);      
+    }
+  }
 #endif
 }
 
@@ -206,8 +228,15 @@ void ScreenCapturePlugin::SetButtonMessage(WCHAR* ok_caption,
                                            WCHAR* cancel_caption) {
   CaptureWindow::SetButtonMessage(ok_caption, cancel_caption);
 }
+#elif GTK
+void ScreenCapturePlugin::SetButtonMessage(const char* ok_caption, 
+                                           const char* cancel_caption) {
+  CaptureLinux::SetButtonMessage(ok_caption, cancel_caption);
+}
+#endif
 
 bool ScreenCapturePlugin::SetHotKey(int keycode) {
+#ifdef _WINDOWS
   if (get_native_window()) {
     std::string hotkey = "CTRL+ALT+";
     ATOM atom;
@@ -225,9 +254,28 @@ bool ScreenCapturePlugin::SetHotKey(int keycode) {
       return true;
     }
   }
+#elif GTK
+  Display* dpy = XOpenDisplay(NULL);
+  KeyBinder::Binding binding = {0};
+  binding.modifiers = ControlMask | Mod1Mask;
+  binding.handler = GrabKeyHandler;
+  binding.user_data = this;  
+  printf("this = %ld\n", this);
+  if (keycode_ != 0) {    
+    binding.keycode = XKeysymToKeycode(dpy, keycode_);    
+    KeyBinder::UnGrabKey(&binding);
+  }
+  binding.keycode = XKeysymToKeycode(dpy, keycode);
+  XCloseDisplay(dpy);
+  if (KeyBinder::GrabKey(&binding)) {
+    keycode_ = keycode;
+    printf("SetHotKey true!\n");
+    return true;
+  }
+  printf("SetHotKey false!\n");  
+#endif
   return false;
 }
-#endif
 
 void ScreenCapturePlugin::CaptureScreenCallback(unsigned char* image_data, 
                                                 int image_data_len) {
@@ -247,6 +295,12 @@ void ScreenCapturePlugin::CaptureScreenCallback(unsigned char* image_data,
     image = base64;
     free(base64);
   }
+#elif GTK
+  char* base64 = g_base64_encode(image_data, image_data_len);
+  if (base64) {
+    image += base64;
+    g_free(base64);
+  }  
 #endif
   NPVariant params;
   STRINGZ_TO_NPVARIANT(image.c_str(), params);
