@@ -27,18 +27,20 @@ public:
 
   void CaptureScreen();
   void CaptureScreenCallback(unsigned char* image_data, int image_data_len);
+  bool SetHotKey(int keycode);
 
 #ifdef _WINDOWS
-  void SetButtonMessage(WCHAR* ok_caption, WCHAR* cancel_caption);
-  bool SetHotKey(int keycode);
+  void SetButtonMessage(WCHAR* ok_caption, WCHAR* cancel_caption);  
   static LRESULT WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+#elif GTK
+  void SetButtonMessage(const char* ok_caption, const char* cancel_caption);  
 #endif
 
 private:
   ScriptObjectBase* script_object_;
-#ifdef _WINDOWS
-  WNDPROC old_proc_;
   static int keycode_;
+#ifdef _WINDOWS
+  WNDPROC old_proc_;  
 #endif
 };
 
