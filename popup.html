@@ -85,22 +85,23 @@ li:hover {
     return document.getElementById(id);
   }
 
-  function isWindowsPlatform() {
-    return navigator.userAgent.toLowerCase().indexOf('windows') > -1;
+  function isWindowsOrLinuxPlatform() {
+    return navigator.userAgent.toLowerCase().indexOf('windows') > -1 || 
+        navigator.userAgent.toLowerCase().indexOf('linux') > -1;
   }
   
   chrome.extension.onRequest.addListener(function(request, sender, response) {
     if (request.msg == 'page_capturable') {
       $('tip').style.display = 'none';
       $('captureSpecialPageItem').style.display = 'none';
-      if (isWindowsPlatform())
+      if (isWindowsOrLinuxPlatform())
         $('captureScreenItem').style.display = 'block';
       $('captureWindowItem').style.display = 'block';
       $('captureAreaItem').style.display = 'block';
       $('captureWebpageItem').style.display = 'block';
     } else if (request.msg == 'page_uncapturable') {
       i18nReplace('tip', 'special');
-      if (isWindowsPlatform()) {
+      if (isWindowsOrLinuxPlatform()) {
         $('captureScreenItem').style.display = 'block';
         $('tip').style.display = 'none';
       } else {
@@ -159,14 +160,14 @@ li:hover {
       $('captureWindowShortcut').style.display = 'inline';
       $('captureAreaShortcut').style.display = 'inline';
       $('captureWebpageShortcut').style.display = 'inline';
-      if (isWindowsPlatform())
+      if (isWindowsOrLinuxPlatform())
         $('captureScreenShortcut').style.display = 'inline';
       document.body.style.minWidth = "190px"
     } else {
       $('captureWindowShortcut').style.display = 'none';
       $('captureAreaShortcut').style.display = 'none';
       $('captureWebpageShortcut').style.display = 'none';
-      if (isWindowsPlatform())
+      if (isWindowsOrLinuxPlatform())
         $('captureScreenShortcut').style.display = 'none';
       document.body.style.minWidth = "140px";
     }
@@ -175,7 +176,7 @@ li:hover {
       if (tab.url.indexOf('chrome') == 0) {
         $('tip').style.display = 'none';
         $('captureSpecialPageItem').style.display = 'block';
-        if (isWindowsPlatform())
+        if (isWindowsOrLinuxPlatform())
           $('captureScreenItem').style.display = 'block';
         return;
       }
@@ -184,7 +185,7 @@ li:hover {
           isScriptLoad = true;
           if (response.msg == 'capturable') {
             $('tip').style.display = 'none';
-            if (isWindowsPlatform())
+            if (isWindowsOrLinuxPlatform())
               $('captureScreenItem').style.display = 'block';
             $('captureWindowItem').style.display = 'block';
             $('captureAreaItem').style.display = 'block';
@@ -201,7 +202,7 @@ li:hover {
             }
           } else if (response.msg == 'uncapturable') {
             i18nReplace('tip', 'special');
-            if (isWindowsPlatform()) {
+            if (isWindowsOrLinuxPlatform()) {
               $('captureScreenItem').style.display = 'block';
               $('tip').style.display = 'none';
             } else {
@@ -217,7 +218,7 @@ li:hover {
       if (isScriptLoad == false) {
         $('tip').style.display = 'none';
         $('captureSpecialPageItem').style.display = 'block';
-        if (isWindowsPlatform())
+        if (isWindowsOrLinuxPlatform())
           $('captureScreenItem').style.display = 'block';
       }
     }
