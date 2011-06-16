@@ -720,10 +720,17 @@
       pluginobj.SaveScreenshot(
           dataUrl, photoshop.tabTitle, localStorage.lastSavePath,
           function(success, path) {
-            if (!success)
-              alert(chrome.i18n.getMessage('save_fail'));
-            else if (path && path != "")
+            var message = chrome.i18n.getMessage('save_fail');
+            var messageClass = 'tip_failed';
+            if (success && path) {
+              var i18nMessage = chrome.i18n.getMessage('saved_to_path');
+              message = i18nMessage + '<a title="' + path +
+                  '" onclick="bg.plugin.openSavePath(\'' +
+                  path.replace(/\\/g, '/') + '\');">' + path + '</a>';
+              messageClass = 'tip_succeed';
               localStorage.lastSavePath = path;
+            }
+            photoshop.showTip(messageClass, message, 5000);
           },
           chrome.i18n.getMessage("save_image"));
       photoshop.finish();
@@ -738,11 +745,14 @@
       else
         dataUrl = $('canvas').toDataURL('image/png');
       var copyFlag = bg.plugin.saveToClipboard(dataUrl);
+      var messageKey = 'tip_copy_failed';
+      var messageClass = 'tip_failed';
       if (copyFlag) {
-        photoshop.showTip('tip_succeed', 'tip_copy_succeed');
-      } else {
-        photoshop.showTip('tip_failed', 'tip_copy_failed');
+        messageKey = 'tip_copy_succeed';
+        messageClass = 'tip_succeed';
       }
+      var message = chrome.i18n.getMessage(messageKey);
+      photoshop.showTip(messageClass, message);
       photoshop.finish();
     },
     
@@ -1034,31 +1044,16 @@
       }
     },
 
-    showTip: function(className, message) {
-      var div = document.createElement('DIV');
+    showTip: function(className, message, delay) {
+      delay = delay || 2000;
+      var div = document.createElement('div');
       div.className = className;
-      div.innerText = chrome.i18n.getMessage(message);
-      if (arguments.length == 3)
-      div.innerHTML = div.innerText + '<a target="_blank" href="' + arguments[2] +'"/>' +
-        arguments[2] + '</a>';
+      div.innerHTML = message;
       document.body.appendChild(div);
       div.style.left = (document.body.clientWidth - div.clientWidth) / 2 + 'px';
       window.setTimeout(function() {
         document.body.removeChild(div);
-      }, 2000);
-    },
-
-    showLink: function(className, message, link) {
-      var div = document.createElement('DIV');
-      div.className = className;
-      document.body.appendChild(div);
-      div.style.width = (document.body.clientWidth) / 3 + 'px';
-      div.style.left = (document.body.clientWidth - div.clientWidth) / 2 + 'px';
-      div.innerHTML = chrome.i18n.getMessage(message) + ' <a target="_blank" href="' + link +'"/>' +
-        link + '</a>';
-      window.setTimeout(function() {
-        document.body.removeChild(div);
-      }, 10000);
+      }, delay);
     }
   };
 
