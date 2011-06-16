@@ -524,3 +524,13 @@ ul {
   background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#fefefe),
     to(#cddcf0));
 }
+div.tip_succeed > a {
+  text-decoration: underline;
+  display: inline-block;
+  color: blue;
+  cursor: pointer;
+  max-width: 300px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
