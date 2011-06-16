@@ -8,7 +8,6 @@ var page = {
   endY: 300,
   moveX: 0,
   moveY: 0,
-  scrollbar: 17,
   pageWidth: 0,
   pageHeight: 0,
   visibleWidth: 0,
@@ -21,17 +20,15 @@ var page = {
   scrollYCount: 0,
   scrollX: 0,
   scrollY: 0,
+  captureWidth: 0,
   captureHeight: 0,
-  captureWeight: 0,
-  winHeight: 0,
-  winWidth: 0,
   isSelectionAreaTurnOn: false,
-  isScrollBarX: false,
-  isScrollBarY: false,
   fixedElements_ : [],
   marginTop: 0,
   marginLeft: 0,
   modifiedBottomRightFixedElements: [],
+  originalViewPortWidth: document.documentElement.clientWidth,
+  scrollBarWidth: 17,
 
   hookBodyScrollValue: function(needHook) {
     document.documentElement.setAttribute(
@@ -227,6 +224,56 @@ var page = {
     });
   },
 
+  hasScrollBar: function(axis) {
+    var body = document.body;
+    var docElement = document.documentElement;
+    if (axis == 'x') {
+      if (window.getComputedStyle(body).overflowX == 'scroll')
+        return true;
+      return body.scrollWidth != docElement.clientWidth;
+    } else if (axis == 'y') {
+      if (window.getComputedStyle(body).overflowY == 'scroll')
+        return true;
+      return body.scrollHeight != docElement.clientHeight;
+    }
+  },
+
+  getOriginalViewPortWidth: function() {
+    chrome.extension.sendRequest({ msg: 'original_view_port_width'},
+      function(originalViewPortWidth) {
+        if (originalViewPortWidth) {
+          page.originalViewPortWidth = page.hasScrollBar('y') ?
+            originalViewPortWidth - page.scrollBarWidth : originalViewPortWidth;
+        } else {
+          page.originalViewPortWidth = document.documentElement.clientWidth;
+        }
+      });
+  },
+  
+  calculateSizeAfterZooming: function(originalSize) {
+    var originalViewPortWidth = page.originalViewPortWidth;
+    var currentViewPortWidth = document.documentElement.clientWidth;
+    if (originalViewPortWidth == currentViewPortWidth)
+      return originalSize;
+    return Math.round(
+        originalViewPortWidth * originalSize / currentViewPortWidth);
+  },
+
+  getZoomLevel: function() {
+    return page.originalViewPortWidth / document.documentElement.clientWidth;
+  },
+
+  handleRightFloatBoxInGmail: function() {
+    var mainframe = document.getElementById('canvas_frame');
+    var boxContainer = document.querySelector('body > .dw');
+    var fBody = mainframe.contentDocument.body;
+    if (fBody.clientHeight + fBody.scrollTop == fBody.scrollHeight) {
+      boxContainer.style.display = 'block';
+    } else {
+      boxContainer.style.display = 'none';
+    }
+  },
+
   /**
    * Check if the page is only made of invisible embed elements.
    */
@@ -276,8 +323,10 @@ var page = {
           response(page.scrollNext());
           break;
         case 'capture_selected':
-          response(page.scrollInit(page.startX,
-              page.startY, page.endX - page.startX, page.endY - page.startY,
+          response(page.scrollInit(
+              page.startX, page.startY,
+              page.calculateSizeAfterZooming(page.endX - page.startX),
+              page.calculateSizeAfterZooming(page.endY - page.startY),
               'captureSelected'));
           break;
       }
@@ -305,7 +354,6 @@ var page = {
     this.handleFixedElements('top_left');
     this.handleSecondToLastCapture();
 
-    var hostName = window.location.hostname;
     if (page.isGMailPage() && type == 'captureWhole') {
       var frame = document.getElementById('canvas_frame');
       docHeight = page.captureHeight = canvasHeight =
@@ -313,25 +361,28 @@ var page = {
       docWidth = page.captureWidth = canvasWidth = frame.contentDocument.width;
       frame.contentDocument.body.scrollTop = 0;
       frame.contentDocument.body.scrollLeft = 0;
+      page.handleRightFloatBoxInGmail();
     }
     page.scrollXCount = 0;
     page.scrollYCount = 1;
-    page.scrollX = window.scrollX;
+    page.scrollX = window.scrollX; // document.body.scrollLeft
     page.scrollY = window.scrollY;
     return {
-        'msg': 'scroll_init_done',
-        'startX': startX,
-        'startY': startY,
-        'scrollX': window.scrollX,
-        'scrollY': window.scrollY,
-        'docHeight': docHeight,
-        'docWidth': docWidth,
-        'visibleWidth': document.documentElement.clientWidth,
-        'visibleHeight': document.documentElement.clientHeight,
-        'canvasWidth': canvasWidth,
-        'canvasHeight': canvasHeight,
-        'scrollXCount': 0,
-        'scrollYCount': 0};
+      'msg': 'scroll_init_done',
+      'startX': page.calculateSizeAfterZooming(startX),
+      'startY': page.calculateSizeAfterZooming(startY),
+      'scrollX': window.scrollX,
+      'scrollY': window.scrollY,
+      'docHeight': docHeight,
+      'docWidth': docWidth,
+      'visibleWidth': document.documentElement.clientWidth,
+      'visibleHeight': document.documentElement.clientHeight,
+      'canvasWidth': canvasWidth,
+      'canvasHeight': canvasHeight,
+      'scrollXCount': 0,
+      'scrollYCount': 0,
+      'zoom': page.getZoomLevel()
+    };
   },
 
   /**
@@ -363,6 +414,7 @@ var page = {
             page.scrollYCount * doc.clientWidth;
         frame.contentDocument.body.scrollTop =
             page.scrollXCount * doc.clientHeight;
+        page.handleRightFloatBoxInGmail();
       }
       var x = page.scrollXCount;
       var y = page.scrollYCount;
@@ -428,7 +480,8 @@ var page = {
   * Load the screenshot area interface
   */
   createSelectionArea: function() {
-    var areaProtector = $('sc_drag_area_protector'); 
+    var areaProtector = $('sc_drag_area_protector');
+    var zoom = page.getZoomLevel();
     var bodyStyle = window.getComputedStyle(document.body, null);
     if ('relative' == bodyStyle['position']) {
       page.marginTop = page.matchMarginValue(bodyStyle['marginTop']);
@@ -436,10 +489,10 @@ var page = {
       areaProtector.style.top =  - parseInt(page.marginTop) + 'px';
       areaProtector.style.left =  - parseInt(page.marginLeft) + 'px';
     }
-    areaProtector.style.width = (document.width + parseInt(page.marginLeft)) +
-      'px';
-    areaProtector.style.height = (document.height + parseInt(page.marginTop)) +
-      'px';
+    areaProtector.style.width =
+      Math.round((document.width + parseInt(page.marginLeft)) / zoom) + 'px';
+    areaProtector.style.height =
+      Math.round((document.height + parseInt(page.marginTop)) / zoom) + 'px';
     areaProtector.onclick = function() {
       event.stopPropagation();
       return false;
@@ -578,11 +631,14 @@ var page = {
         if (page.dragging || page.resizing) {
           var width = 0;
           var height = 0;
-          if (xPosition > document.width) {
-            xPosition = document.width;
+          var zoom = page.getZoomLevel();
+          var viewWidth = Math.round(document.width / zoom);
+          var viewHeight = Math.round(document.height / zoom);
+          if (xPosition > viewWidth) {
+            xPosition = viewWidth;
           }
-          if (yPosition > document.height) {
-            yPosition = document.height;
+          if (yPosition > viewHeight) {
+            yPosition = viewHeight;
           }
           page.endX = xPosition;
           page.endY = yPosition;
@@ -726,11 +782,10 @@ var page = {
   * Refresh the size info
   */
   updateSize: function() {
-    var width = (page.endX > page.startX) ? (page.endX - page.startX) :
-        (page.startX - page.endX);
-    var height = (page.endY > page.startY) ? (page.endY - page.startY) :
-        (page.startY - page.endY);
-    $('sc_drag_size').innerText = width + ' x ' + height;
+    var width = Math.abs(page.endX - page.startX);
+    var height = Math.abs(page.endY - page.startY);
+    $('sc_drag_size').innerText = page.calculateSizeAfterZooming(width) +
+      ' x ' + page.calculateSizeAfterZooming(height);
   },
 
   /**
@@ -785,6 +840,9 @@ var page = {
     this.injectCssResource('style.css');
     this.addMessageListener();
     this.injectJavaScriptResource("page_context.js");
+
+    // Retrieve original width of view port and cache.
+    page.getOriginalViewPortWidth();
   }
 };
 
@@ -801,16 +859,14 @@ function $(id) {
 
 page.init();
 
-var selfResizeEvent = window.onresize;
-
 window.onresize = function() {
-  if (selfResizeEvent) {
-    selfResizeEvent();
-  }
   if (page.isSelectionAreaTurnOn) {
     page.removeSelectionArea();
     page.showSelectionArea();
   }
+
+  // Reget original width of view port if browser window resized or page zoomed.
+  page.getOriginalViewPortWidth();
 };
 
 // Send page url for retriving and parsing access token for facebook and picasa.

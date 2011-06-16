@@ -42,6 +42,14 @@ var plugin = {
 
   setHotKey: function(keyCode) {
     return this.pluginObj.SetHotKey(keyCode);
+  },
+
+  getViewPortWidth: function() {
+    try {
+      return this.pluginObj.GetViewPortWidth();
+    } catch (e) {
+      return null;
+    }
   }
 };
 
@@ -110,6 +118,9 @@ var screenshot = {
             screenshot.captureWebpage();
           }
           break;
+        case 'original_view_port_width':
+          response(plugin.getViewPortWidth());
+          break;
       }
     });
   },
@@ -164,6 +175,7 @@ var screenshot = {
         screenshot.scrollYCount = response.scrollYCount;
         screenshot.docWidth = response.docWidth;
         screenshot.docHeight = response.docHeight;
+        screenshot.zoom = response.zoom;
         setTimeout("screenshot.captureAndScroll()", 100);
         break;
       case 'scroll_next_done':
@@ -265,20 +277,28 @@ var screenshot = {
         var context = screenshot.canvas.getContext('2d');
         var width = 0;
         var height = 0;
+
+        // Get scroll bar's width.
         screenshot.scrollBarY = 
             screenshot.visibleHeight < screenshot.docHeight ? 17 : 0;
         screenshot.scrollBarX = 
             screenshot.visibleWidth < screenshot.docWidth ? 17 : 0;
+
+        // Get visible width and height of capture result.
         var visibleWidth = 
             (image.width - screenshot.scrollBarY < screenshot.canvas.width ?
-            image.width - screenshot.scrollBarY : screenshot.canvas.width) ;
+            image.width - screenshot.scrollBarY : screenshot.canvas.width);
         var visibleHeight = 
             (image.height - screenshot.scrollBarX < screenshot.canvas.height ?
             image.height - screenshot.scrollBarX : screenshot.canvas.height);
-        var x1 = screenshot.startX - screenshot.scrollX;
+
+        // Get region capture start x coordinate.
+        var zoom = screenshot.zoom;
+        var x1 = screenshot.startX - Math.round(screenshot.scrollX * zoom);
         var x2 = 0;
-        var y1 = screenshot.startY - screenshot.scrollY;
+        var y1 = screenshot.startY - Math.round(screenshot.scrollY * zoom);
         var y2 = 0;
+
         if ((screenshot.scrollYCount + 1) * visibleWidth >
             screenshot.canvas.width) {
           width = screenshot.canvas.width % visibleWidth ;
@@ -287,6 +307,7 @@ var screenshot = {
         } else {
           width = visibleWidth;
         }
+        
         if ((screenshot.scrollXCount + 1) * visibleHeight >
             screenshot.canvas.height) {
           height = screenshot.canvas.height % visibleHeight;
@@ -301,8 +322,8 @@ var screenshot = {
         } else {
           height = visibleHeight ;
         }
-        x2 = screenshot.scrollYCount * visibleWidth ;
-        y2 = screenshot.scrollXCount * visibleHeight ;
+        x2 = screenshot.scrollYCount * visibleWidth;
+        y2 = screenshot.scrollXCount * visibleHeight;
         context.drawImage(image, x1, y1, width, height, x2, y2, width, height);
         screenshot.sendMessage({msg: 'scroll_next', visibleWidth: visibleWidth,
             visibleHeight: visibleHeight}, screenshot.onResponseVisibleSize);
