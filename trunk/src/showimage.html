@@ -804,19 +804,24 @@
     },
 
     createColorPadStr: function(type) {
-      var colorList = ['#000000', '#808080', '#800000', '#808000', '#008000',
-                       '#008080', '#000080', '#800080', '#808040', '#004040',
-                       '#0080FF', '#004080', '#8000FF', '#804000', '#FFFFFF',
-                       '#C0C0C0', '#FF0000', '#FFF000', '#00FF00', '#00FFFF',
-                       '#0000FF', '#FF00FF', '#FFFF80', '#00FF80', '#80FFFF',
-                       '#8080FF', '#FF0080'];
+      var colorList = ['#000000', '#0036ff', '#008000', '#dacb23', '#d56400',
+        '#c70000', '#be00b3', '#1e2188', '#0090ff', '#22cc01', '#ffff00',
+        '#ff9600', '#ff0000', '#ff008e', '#7072c3', '#49d2ff', '#9dff3d',
+        '#ffffff', '#ffbb59', '#ff6b6b', '#ff6bbd'];
       var  colorPadStr = '';
       colorPadStr += '<div id="colorpad">';
       for(var i = 0; i < colorList.length; i++) {
-        colorList[i]= '<a href="javascript:photoshop.colorPadPick(\'' + colorList[i] +
-            '\',\'' + type + '\');" style="background:' + colorList[i] + ';"></a>';
+        var color = colorList[i];
+        var specialStyle = '';
+        if (color == '#ffffff') {
+          specialStyle = 'border: 1px solid #444; width: 12px; height: 12px;';
+        }
+        colorList[i]= '<a title="' + color +
+            '" href="javascript:photoshop.colorPadPick(\'' +
+            color + '\',\'' + type + '\');" style="background:' +
+            color + ';' + specialStyle + '"></a>';
       }
-      colorPadStr = colorPadStr + colorList.join("\n") + '</div>'
+      colorPadStr = colorPadStr + colorList.join("\n") + '</div>';
       return colorPadStr;
     },
 

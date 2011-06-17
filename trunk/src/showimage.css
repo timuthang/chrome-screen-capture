@@ -115,16 +115,17 @@ body {
   word-break: normal;
   background-color: #ffffff;
   padding: 4px;
-  width: 145px;
+  width: 116px;
 }
 #colorpad a {
-  margin: 1px;
-  padding: 1px;
+  margin: 1px 3px 2px 0;
   display: block;
-  height: 10px;
-  width: 10px;
+  height: 14px;
+  width: 14px;
   float: left;
-  border: 1px solid #333333;
+}
+#colorpad a:nth-child(7n) {
+  margin-right: 0;
 }
 .colorBox, .ellipseBox  {
   float: left;
