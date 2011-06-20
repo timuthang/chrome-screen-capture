@@ -5,6 +5,9 @@
    "autosave": {
       "message": "Автосохранение - после захвата пропустить редактирование экрана и сразу сохранить захваченное изображение в папку по умолчанию с названием веб-страницы в качестве имени файла."
    },
+   "bad_access_token": {
+      "message": "Недопустимый маркер доступа."
+   },
    "blur": {
       "message": "Пятно"
    },
@@ -16,6 +19,9 @@
    },
    "capture_area": {
       "message": "Область захвата"
+   },
+   "capture_screen": {
+      "message": "Захват области экрана"
    },
    "capture_webpage": {
       "message": "Захват всей страницы"
@@ -47,29 +53,41 @@
    "edit_tip": {
       "message": "Ниже приведен скриншот, того что Вы захватили. Вы можете редактировать его с помощью инструментов слева. Нажмите Сохранить по завершении."
    },
-   "facebook_bad_access_token": {
-      "message": "Неверный маркер доступа."
-   },
    "facebook_get_photo_link": {
       "message": "Получение ссылки на изображения..."
-   },
-   "facebook_unknown_error": {
-      "message": "Неизвестная ошибка."
    },
    "facebook_upload_header": {
       "message": "Facebook"
    },
-   "facebook_user_denied": {
-      "message": "Пользователю отказано."
-   },
    "failed_to_connect_to_server": {
       "message": "Невозможно подключиться к серверу."
+   },
+   "failed_to_get_photo_link": {
+      "message": "Не удалось получить фото ссылку."
+   },
+   "failed_to_get_user_info": {
+      "message": "Не удалось получить информацию о пользователе, повторите попытку позже."
+   },
+   "failed_to_register_hot_key_for_screen_capture": {
+      "message": "Ярлык для Захвата области экрана зарегистрирован другим приложением. Пожалуйста, переопределите его."
+   },
+   "failed_to_upload_image": {
+      "message": "Не удалось загрузить изображение, повторите попытку позже."
+   },
+   "failure_to_create_album": {
+      "message": "Не удалось создать альбом, повторите попытку позже."
    },
    "highlight": {
       "message": "Выделить"
    },
+   "hot_key_conflict": {
+      "message": "Конфликт ярлыков."
+   },
    "image_caption": {
       "message": "Название изображения"
+   },
+   "invalid_album_id": {
+      "message": "Альбом не найден."
    },
    "invalid_caption": {
       "message": "Требуется название изображения."
@@ -103,6 +121,13 @@
    },
    "photo_size_tip": {
       "message": "Подсказка: Вы не можете загрузить изображение больше 3Мб."
+   },
+   "picasa_upload_header": {
+      "message": "Picasa"
+   },
+   "print": {
+      "message": "Печать"
+
    },
    "progress_info": {
       "message": "Изображение загружается, подождите..."
@@ -158,6 +183,9 @@
    "share_to_other_account": {
       "message": "Отправить на другую учетную запись"
    },
+   "share_to_picasa_account": {
+      "message": "Отправить на Вашу учетную запись Picasa"
+   },
    "share_to_sina_account": {
       "message": "Отправить на Вашу учетную запись в Sina Microblog"
    },
@@ -172,9 +200,6 @@
    },
    "sina_failed_to_get_request_token": {
       "message": "Не удалось получить запрос маркера, повторите попытку позже."
-   },
-   "sina_failed_to_get_user_info": {
-      "message": "Не удалось получить информацию о пользователе, повторите попытку позже."
    },
    "sina_upload_header": {
       "message": "Sina Microblog"
@@ -206,11 +231,17 @@
    "tip_copy_succeed": {
       "message": "Скриншот скопирован."
    },
+   "unknown_error": {
+      "message": "Неизвестная ошибка."
+   },
    "upload_sites_header": {
       "message": "Отправить изображение в"
    },
    "user_authentication_tip": {
       "message": "Авторизация пользователя, подождите..."
+   },
+   "user_denied": {
+      "message": "Пользователю отказано."
    },
    "user_logout_tip": {
       "message": "Выход, подождите..."
