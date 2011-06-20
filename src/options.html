@@ -277,20 +277,21 @@
   <script src="ui.js"></script>
   <script>
     const CURRENT_LOCALE = chrome.i18n.getMessage('@@ui_locale');
-    if (CURRENT_LOCALE.indexOf('en') == 0) {
+    if (CURRENT_LOCALE != 'zh_CN') {
       UI.addStyleSheet('./i18n_styles/en_options.css');
     }
 
-    function isWindowsPlatform() {
-      return navigator.userAgent.toLowerCase().indexOf('windows') > -1;
+    function isWindowsOrLinuxPlatform() {
+      return navigator.userAgent.toLowerCase().indexOf('windows') > -1 ||
+          navigator.userAgent.toLowerCase().indexOf('linux') > -1;
     }
-    
+
     var HotKeySetting = (function() {
       const CHAR_CODE_OF_A = 65;
       const CHAR_CODE_OF_Z = 90;
       var hotKeySelection =
         document.querySelectorAll('#hot-key-setting select');
-      var isWindows = isWindowsPlatform();
+      var isWindowsOrLinux = isWindowsOrLinuxPlatform();
 
       var hotkey = {
         setup: function() {
@@ -303,7 +304,7 @@
             chrome.i18n.getMessage('capture_webpage');
           $('screen-capture-text').innerText =
             chrome.i18n.getMessage('capture_screen');
-          
+
           for (var i = 0; i < hotKeySelection.length; i++) {
             for (var j = CHAR_CODE_OF_A; j <= CHAR_CODE_OF_Z; j++) {
               var value = String.fromCharCode(j);
@@ -326,7 +327,7 @@
           }, false);
 
           hotkey.setState(HotKey.isEnabled());
-          if (isWindows) {
+          if (isWindowsOrLinux) {
             // Capture screen region is not support on Linux and Mac platform.
             $('screen-capture-hot-key-set-wrapper').style.display =
                 'inline-block';
@@ -344,7 +345,7 @@
           validateMap[hotKeySelection[0].value] = true;
           validateMap[hotKeySelection[1].value] = true;
           validateMap[hotKeySelection[2].value] = true;
-          if (isWindows) {
+          if (isWindowsOrLinux) {
             validateMap[hotKeySelection[3].value] = true;
             hotKeyLength += 1;
           }
@@ -366,7 +367,7 @@
               HotKey.set('viewport', $('viewport-capture-hot-key').value);
               HotKey.set('fullpage', $('full-page-capture-hot-key').value);
 
-              if (isWindows) {
+              if (isWindowsOrLinux) {
                 var screenCaptureHotKey = $('screen-capture-hot-key').value;
                 if (bg.plugin.setHotKey(screenCaptureHotKey.charCodeAt(0))) {
                   HotKey.set('screen', screenCaptureHotKey);

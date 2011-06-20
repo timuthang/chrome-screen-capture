@@ -26,7 +26,10 @@ var UploadUI = {
     UploadUI.registerSite(Picasa.siteId, Picasa);
     
     // Import style sheet for current locale
-    UI.addStyleSheet('./i18n_styles/' + CURRENT_LOCALE + '_upload_image.css');
+    if (CURRENT_LOCALE == 'zh_CN')
+      UI.addStyleSheet('./i18n_styles/zh_CN_upload_image.css');
+    else
+      UI.addStyleSheet('./i18n_styles/en_US_upload_image.css');
 
     // Get i18n message
     i18nReplace('shareToSinaMicroblogText', SinaMicroblog.siteId +
