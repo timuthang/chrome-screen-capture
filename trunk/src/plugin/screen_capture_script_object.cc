@@ -366,8 +366,8 @@ bool ScreenCaptureScriptObject::SaveToClipboard(
   if (argCount != 1 || !NPVARIANT_IS_STRING(args[0]))
     return false;
 
-  char* base64 = strstr((char*)NPVARIANT_TO_STRING(args[0]).UTF8Characters,
-                        "base64,");
+  const char* base64 = strstr(NPVARIANT_TO_STRING(args[0]).UTF8Characters,
+                              "base64,");
   if (!base64)
    return false;
   base64 += 7;
@@ -599,8 +599,9 @@ bool ScreenCaptureScriptObject::PrintImage(const NPVariant* args,
   if (!NPVARIANT_IS_DOUBLE(args[3]) && !NPVARIANT_IS_INT32(args[3]))
     return false;
 
-  const char* url = (const char*)NPVARIANT_TO_STRING(args[0]).UTF8Characters;
-  const char* title = (const char*)NPVARIANT_TO_STRING(args[1]).UTF8Characters;
+  const char* url = NPVARIANT_TO_STRING(args[0]).UTF8Characters;
+  std::string title(NPVARIANT_TO_STRING(args[1]).UTF8Characters,
+                    NPVARIANT_TO_STRING(args[1]).UTF8Length);
   int image_width = NPVARIANT_IS_DOUBLE(args[2]) ? 
       NPVARIANT_TO_DOUBLE(args[2]) : NPVARIANT_TO_INT32(args[2]);
   int image_height = NPVARIANT_IS_DOUBLE(args[3]) ?
@@ -673,8 +674,10 @@ bool ScreenCaptureScriptObject::AutoSave(
     return false;
 
   const char* url = (const char*)NPVARIANT_TO_STRING(args[0]).UTF8Characters;
-  const char* title = (const char*)NPVARIANT_TO_STRING(args[1]).UTF8Characters;
-  const char* path = (const char*)NPVARIANT_TO_STRING(args[2]).UTF8Characters;
+  std::string title(NPVARIANT_TO_STRING(args[1]).UTF8Characters,
+                    NPVARIANT_TO_STRING(args[1]).UTF8Length);
+  std::string path(NPVARIANT_TO_STRING(args[2]).UTF8Characters,
+                   NPVARIANT_TO_STRING(args[2]).UTF8Length);
 
   const char* base64 = strstr(url, "base64,");
   if (!base64)
@@ -691,7 +694,7 @@ bool ScreenCaptureScriptObject::AutoSave(
 
 #ifdef _WINDOWS
   TCHAR szWideBuf[MAX_PATH] = { 0 };
-  MultiByteToWideChar(CP_UTF8, 0, path, -1, szWideBuf, MAX_PATH);
+  MultiByteToWideChar(CP_UTF8, 0, path.c_str(), -1, szWideBuf, MAX_PATH);
   if (!PathIsDirectory(szWideBuf)) {
     result->value.boolValue = 0;
     return true;
@@ -701,18 +704,18 @@ bool ScreenCaptureScriptObject::AutoSave(
   path = szPath;
 
   memset(szWideBuf, 0, sizeof(szWideBuf));
-  MultiByteToWideChar(CP_UTF8, 0, title, -1, szWideBuf, MAX_PATH);
+  MultiByteToWideChar(CP_UTF8, 0, title.c_str(), -1, szWideBuf, MAX_PATH);
   char szTitle[MAX_PATH] = { 0 };
   WideCharToMultiByte(CP_ACP, 0, szWideBuf, -1, szTitle, MAX_PATH, 0, 0);
   title = szTitle;
 #elif defined GTK
   struct stat st;
-  if (stat(path, &st) != 0 || !S_ISDIR(st.st_mode)) {
+  if (stat(path.c_str(), &st) != 0 || !S_ISDIR(st.st_mode)) {
     result->value.boolValue = 0;
     return true;
   }
 #elif defined __APPLE__
-  if (!IsFolder(path)) {
+  if (!IsFolder(path.c_str())) {
     result->value.boolValue = 0;
     return true;
   }
@@ -721,7 +724,7 @@ bool ScreenCaptureScriptObject::AutoSave(
   static const char* kReplacedChars = "\\/:*?\"<>|";
   std::string filename(path);
   filename += '/';
-  int len = strlen(title);
+  int len = title.length();
   for (int i = 0; i < len; i++) {
     filename += (title[i] < ' ' || strchr(kReplacedChars, title[i]) == NULL) ?
         title[i] : '-';
@@ -742,18 +745,22 @@ bool ScreenCaptureScriptObject::SetSavePath(
       !NPVARIANT_IS_STRING(args[2]))
     return false;
 
-  const char* path = NPVARIANT_TO_STRING(args[0]).UTF8Characters;
+  std::string path(NPVARIANT_TO_STRING(args[0]).UTF8Characters,
+                   NPVARIANT_TO_STRING(args[0]).UTF8Length);
   NPObject* callback = NPVARIANT_TO_OBJECT(args[1]);
-  const char* dialog_title = NPVARIANT_TO_STRING(args[2]).UTF8Characters;
+  std::string dialog_title(NPVARIANT_TO_STRING(args[2]).UTF8Characters,
+                           NPVARIANT_TO_STRING(args[2]).UTF8Length);
 
 #ifdef _WINDOWS
   TCHAR display_name[MAX_PATH] = {0};
   BrowserParam param = {0};
 
   if (NPVARIANT_TO_STRING(args[0]).UTF8Length > 0)
-    MultiByteToWideChar(CP_UTF8, 0, path, -1, param.initial_path, MAX_PATH);
+    MultiByteToWideChar(CP_UTF8, 0, path.c_str(), -1, 
+                        param.initial_path, MAX_PATH);
   if (NPVARIANT_TO_STRING(args[2]).UTF8Length > 0)
-    MultiByteToWideChar(CP_UTF8, 0, dialog_title, -1, param.title, MAX_PATH);
+    MultiByteToWideChar(CP_UTF8, 0, dialog_title.c_str(), -1, 
+                        param.title, MAX_PATH);
 
   BROWSEINFO info={0};
   info.hwndOwner = get_plugin()->get_native_window();
@@ -775,12 +782,13 @@ bool ScreenCaptureScriptObject::SetSavePath(
   NPN_RetainObject(callback);
   if (!folder_dialog_) {
     GtkWidget *dialog = gtk_file_chooser_dialog_new(
-        dialog_title, NULL,
+        dialog_title.c_str(), NULL,
         GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER,
         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
         GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT, NULL);
     gtk_window_set_position(GTK_WINDOW(dialog), GTK_WIN_POS_CENTER);
-    gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog), path);
+    gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog), 
+                                        path.c_str());
 
     g_signal_connect(dialog, "response", G_CALLBACK(OnDialogResponse),
                      get_plugin()->get_npp());
@@ -793,7 +801,7 @@ bool ScreenCaptureScriptObject::SetSavePath(
   gtk_window_present(GTK_WINDOW(folder_dialog_));
 #elif defined __APPLE__
   InvokeCallback(get_plugin()->get_npp(), callback,
-                 SetSaveFolder(path, dialog_title).c_str());
+                 SetSaveFolder(path.c_str(), dialog_title.c_str()).c_str());
 #endif
 
   return true;
@@ -804,20 +812,21 @@ bool ScreenCaptureScriptObject::OpenSavePath(
   if (argCount < 1 || !NPVARIANT_IS_STRING(args[0]))
     return false;
 
-  const char* path = NPVARIANT_TO_STRING(args[0]).UTF8Characters;
+  std::string path(NPVARIANT_TO_STRING(args[0]).UTF8Characters,
+                   NPVARIANT_TO_STRING(args[0]).UTF8Length);
 
 #ifdef _WINDOWS
   TCHAR save_path[MAX_PATH] = L"";
-  MultiByteToWideChar(CP_UTF8, 0, path, -1, save_path, MAX_PATH);
+  MultiByteToWideChar(CP_UTF8, 0, path.c_str(), -1, save_path, MAX_PATH);
   ShellExecute(NULL, L"open", save_path, NULL, NULL, SW_SHOWNORMAL);
 #elif defined GTK
   if (fork() == 0) {
-    execlp("xdg-open", "xdg-open", path, NULL);
-    execlp("gnome-open", "gnome-open", path, NULL);
+    execlp("xdg-open", "xdg-open", path.c_str(), NULL);
+    execlp("gnome-open", "gnome-open", path.c_str(), NULL);
     exit(1);
   }
 #elif defined __APPLE__
-  OpenSaveFolder(path);
+  OpenSaveFolder(path.c_str());
 #endif
 
   return true;
@@ -832,13 +841,16 @@ bool ScreenCaptureScriptObject::SaveScreenshot(
 
     return false;
 
-  char* url = (char*)NPVARIANT_TO_STRING(args[0]).UTF8Characters;
-  char* title = (char*)NPVARIANT_TO_STRING(args[1]).UTF8Characters;
-  char* path = (char*)NPVARIANT_TO_STRING(args[2]).UTF8Characters;
+  const char* url = NPVARIANT_TO_STRING(args[0]).UTF8Characters;
+  std::string title(NPVARIANT_TO_STRING(args[1]).UTF8Characters,
+                    NPVARIANT_TO_STRING(args[1]).UTF8Length);
+  std::string path(NPVARIANT_TO_STRING(args[2]).UTF8Characters,
+                   NPVARIANT_TO_STRING(args[2]).UTF8Length);
   NPObject* callback = NPVARIANT_TO_OBJECT(args[3]);
-  char* dialog_title = (char*)NPVARIANT_TO_STRING(args[4]).UTF8Characters;
+  std::string dialog_title(NPVARIANT_TO_STRING(args[4]).UTF8Characters,
+                           NPVARIANT_TO_STRING(args[4]).UTF8Length);
 
-  char* base64 = strstr(url, "base64,");
+  const char* base64 = strstr(url, "base64,");
   if (!base64)
     return false;
 
@@ -854,15 +866,16 @@ bool ScreenCaptureScriptObject::SaveScreenshot(
   char initial_path[MAX_PATH];
   char sz_dialog_title[MAX_PATH];
 
-  MultiByteToWideChar(CP_UTF8, 0, dialog_title, -1, temp_value, MAX_PATH);
+  MultiByteToWideChar(CP_UTF8, 0, dialog_title.c_str(), -1, 
+                      temp_value, MAX_PATH);
   WideCharToMultiByte(CP_ACP, 0, temp_value, -1, 
                       sz_dialog_title, MAX_PATH, 0, 0);
 
-  MultiByteToWideChar(CP_UTF8, 0, path, -1, temp_value, MAX_PATH);
+  MultiByteToWideChar(CP_UTF8, 0, path.c_str(), -1, temp_value, MAX_PATH);
   WideCharToMultiByte(CP_ACP, 0, temp_value, -1, initial_path, MAX_PATH, 0, 0);
 
   char sz_file[MAX_PATH] = "";
-  MultiByteToWideChar(CP_UTF8, 0, title, -1, temp_value, MAX_PATH);
+  MultiByteToWideChar(CP_UTF8, 0, title.c_str(), -1, temp_value, MAX_PATH);
   WideCharToMultiByte(CP_ACP, 0, temp_value, -1, sz_file, MAX_PATH, 0, 0);
 
   static const char* kReplacedChars = "\\/:*?\"<>|";
@@ -911,14 +924,14 @@ bool ScreenCaptureScriptObject::SaveScreenshot(
 
   if (!save_dialog_) {
     GtkWidget *dialog = gtk_file_chooser_dialog_new(
-        dialog_title, NULL,
+        dialog_title.c_str(), NULL,
         GTK_FILE_CHOOSER_ACTION_SAVE,
         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
         GTK_STOCK_SAVE, GTK_RESPONSE_ACCEPT, NULL);
     gtk_window_set_position(GTK_WINDOW(dialog), GTK_WIN_POS_CENTER);
     gtk_file_chooser_set_do_overwrite_confirmation(GTK_FILE_CHOOSER(dialog),
                                                    TRUE);
-    gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog), path);
+    gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog), path.c_str());
 
     GtkFileFilter *file_filter = gtk_file_filter_new();
     if (postfix == ".png") {
@@ -948,7 +961,8 @@ bool ScreenCaptureScriptObject::SaveScreenshot(
   }
   gtk_window_present(GTK_WINDOW(save_dialog_));
 #elif defined __APPLE__
-  std::string file = GetSaveFileName(title, path, dialog_title,
+  std::string file = GetSaveFileName(title.c_str(), path.c_str(), 
+                                     dialog_title.c_str(),
                                      postfix.substr(1).c_str());
   InvokeCallback(
       get_plugin()->get_npp(), callback,
@@ -976,19 +990,23 @@ bool ScreenCaptureScriptObject::SetButtonMessage(const NPVariant* args,
     return false;
   
 #ifdef _WINDOWS
-  utils::Utf8ToUnicode ok_caption(NPVARIANT_TO_STRING(args[0]).UTF8Characters);
+  utils::Utf8ToUnicode ok_caption(NPVARIANT_TO_STRING(args[0]).UTF8Characters,
+                                  NPVARIANT_TO_STRING(args[0]).UTF8Length);
   utils::Utf8ToUnicode cancel_caption(
-      NPVARIANT_TO_STRING(args[1]).UTF8Characters);
+      NPVARIANT_TO_STRING(args[1]).UTF8Characters,
+      NPVARIANT_TO_STRING(args[1]).UTF8Length);
 
   ScreenCapturePlugin* plugin = (ScreenCapturePlugin*)get_plugin();
   if (plugin)
     plugin->SetButtonMessage(ok_caption, cancel_caption);
 #elif GTK
-  const char* ok_caption = NPVARIANT_TO_STRING(args[0]).UTF8Characters;
-  const char* cancel_caption = NPVARIANT_TO_STRING(args[1]).UTF8Characters;
+  std::string ok_caption(NPVARIANT_TO_STRING(args[0]).UTF8Characters,
+                         NPVARIANT_TO_STRING(args[0]).UTF8Length);
+  std::string cancel_caption(NPVARIANT_TO_STRING(args[1]).UTF8Characters,
+                             NPVARIANT_TO_STRING(args[1]).UTF8Length);
   ScreenCapturePlugin* plugin = (ScreenCapturePlugin*)get_plugin();
   if (plugin)
-    plugin->SetButtonMessage(ok_caption, cancel_caption);
+    plugin->SetButtonMessage(ok_caption.c_str(), cancel_caption.c_str());
 #endif
   return true;
 }
