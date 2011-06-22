@@ -40,7 +40,7 @@
   overflow: hidden;
 }
 #sc_drag_size {
-  background-color:#444444;
+  background-color: rgba(44, 44, 44, 0.5);
   color:#ffffff;
   font-family: arial,san-serif;
   font-weight:bold;
@@ -53,11 +53,11 @@
   padding-left:4px;
   padding-right:4px;
   text-align:center;
-  top: -13px;
+  top: -18px;
   z-index:9998;
 }
 #sc_drag_cancel, #sc_drag_crop {
-  background:#000000;
+  background-color: rgba(0, 0, 0, 0.5);
   cursor:pointer;
   color:#ffffff;
   font-size:12px;

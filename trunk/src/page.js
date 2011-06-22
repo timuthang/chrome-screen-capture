@@ -28,7 +28,7 @@ var page = {
   marginLeft: 0,
   modifiedBottomRightFixedElements: [],
   originalViewPortWidth: document.documentElement.clientWidth,
-  scrollBarWidth: 17,
+  defaultScrollBarWidth: 17, // Default scroll bar width on windows platform.
 
   hookBodyScrollValue: function(needHook) {
     document.documentElement.setAttribute(
@@ -230,11 +230,13 @@ var page = {
     if (axis == 'x') {
       if (window.getComputedStyle(body).overflowX == 'scroll')
         return true;
-      return body.scrollWidth != docElement.clientWidth;
+      return Math.abs(body.scrollWidth - docElement.clientWidth) >=
+          page.defaultScrollBarWidth;
     } else if (axis == 'y') {
       if (window.getComputedStyle(body).overflowY == 'scroll')
         return true;
-      return body.scrollHeight != docElement.clientHeight;
+      return Math.abs(body.scrollHeight - docElement.clientHeight) >=
+          page.defaultScrollBarWidth;
     }
   },
 
@@ -243,7 +245,7 @@ var page = {
       function(originalViewPortWidth) {
         if (originalViewPortWidth) {
           page.originalViewPortWidth = page.hasScrollBar('y') ?
-            originalViewPortWidth - page.scrollBarWidth : originalViewPortWidth;
+            originalViewPortWidth - page.defaultScrollBarWidth : originalViewPortWidth;
         } else {
           page.originalViewPortWidth = document.documentElement.clientWidth;
         }
@@ -636,9 +638,13 @@ var page = {
           var viewHeight = Math.round(document.height / zoom);
           if (xPosition > viewWidth) {
             xPosition = viewWidth;
+          } else if (xPosition < 0) {
+            xPosition = 0;
           }
           if (yPosition > viewHeight) {
             yPosition = viewHeight;
+          } else if (yPosition < 0) {
+            yPosition = 0;
           }
           page.endX = xPosition;
           page.endY = yPosition;
@@ -698,6 +704,13 @@ var page = {
         } else {
           crop.style.bottom = '-25px';
           cancel.style.bottom = '-25px';
+        }
+
+        var dragSizeContainer = document.getElementById('sc_drag_size');
+        if (event.pageY < 18) {
+          dragSizeContainer.style.top = 0;
+        } else {
+          dragSizeContainer.style.top = '-18px';
         }
         page.updateShadow(areaElement);
         page.updateSize();
