@@ -287,6 +287,7 @@
     }
 
     var HotKeySetting = (function() {
+      const CHAR_CODE_OF_AT = 64;
       const CHAR_CODE_OF_A = 65;
       const CHAR_CODE_OF_Z = 90;
       var hotKeySelection =
@@ -306,6 +307,7 @@
             chrome.i18n.getMessage('capture_screen');
 
           for (var i = 0; i < hotKeySelection.length; i++) {
+            hotKeySelection[i].add(new Option('--', '@'));
             for (var j = CHAR_CODE_OF_A; j <= CHAR_CODE_OF_Z; j++) {
               var value = String.fromCharCode(j);
               var option = new Option(value, value);
@@ -314,13 +316,13 @@
           }
 
           $('area-capture-hot-key').selectedIndex =
-            HotKey.getCharCode('area') - CHAR_CODE_OF_A;
+            HotKey.getCharCode('area') - CHAR_CODE_OF_AT;
           $('viewport-capture-hot-key').selectedIndex =
-            HotKey.getCharCode('viewport') - CHAR_CODE_OF_A;
+            HotKey.getCharCode('viewport') - CHAR_CODE_OF_AT;
           $('full-page-capture-hot-key').selectedIndex =
-            HotKey.getCharCode('fullpage') - CHAR_CODE_OF_A;
+            HotKey.getCharCode('fullpage') - CHAR_CODE_OF_AT;
           $('screen-capture-hot-key').selectedIndex =
-            HotKey.getCharCode('screen') - CHAR_CODE_OF_A;
+            HotKey.getCharCode('screen') - CHAR_CODE_OF_AT;
 
           $('settingShortcut').addEventListener('click', function() {
             hotkey.setState(this.checked);
@@ -331,28 +333,32 @@
             // Capture screen region is not support on Linux and Mac platform.
             $('screen-capture-hot-key-set-wrapper').style.display =
                 'inline-block';
-            if (HotKey.isEnabled() && window.location.hash ==
-                    '#failed-to-resister-screen-capture-hot-key') {
-              ErrorInfo.show('failed_to_register_hot_key_for_screen_capture');
-              this.focusScreenCapture();
-            }
           }
         },
 
         validate: function() {
-          var hotKeyLength = hotKeySelection.length - 1;
-          var validateMap = {};
-          validateMap[hotKeySelection[0].value] = true;
-          validateMap[hotKeySelection[1].value] = true;
-          validateMap[hotKeySelection[2].value] = true;
-          if (isWindowsOrLinux) {
-            validateMap[hotKeySelection[3].value] = true;
-            hotKeyLength += 1;
-          }
+          var hotKeyLength =
+            Array.prototype.filter.call(hotKeySelection,
+                function (element) {
+                  return element.value != '@'
+                }
+            ).length;
+          if (hotKeyLength != 0) {
+            var validateMap = {};
+            validateMap[hotKeySelection[0].value] = true;
+            validateMap[hotKeySelection[1].value] = true;
+            validateMap[hotKeySelection[2].value] = true;
+            if (isWindowsOrLinux) {
+              validateMap[hotKeySelection[3].value] = true;
+            } else {
+              if (hotKeySelection[3].value != '@')
+                hotKeyLength -= 1;
+            }
 
-          if (Object.keys(validateMap).length < hotKeyLength) {
-            ErrorInfo.show('hot_key_conflict');
-            return false;
+            if (Object.keys(validateMap).length < hotKeyLength) {
+              ErrorInfo.show('hot_key_conflict');
+              return false;
+            }
           }
           ErrorInfo.hide();
           return true;
