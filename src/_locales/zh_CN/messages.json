@@ -84,5 +84,6 @@
   "picasa_upload_header": {"message": "分享到Picasa Web"},
   "share_to_picasa_account": {"message": "分享到你的 Picasa Web 账号"},
   "invalid_album_id": {"message": "相册不存在。"},
-  "saved_to_path": {"message": "图片已保存至 "}
+  "saved_to_path": {"message": "图片已保存至 "},
+  "option": {"message": "选 项"}
 }

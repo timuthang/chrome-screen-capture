@@ -18,9 +18,7 @@ var HotKey = (function() {
       var screenCaptureHotKey = this.get('screen');
       if (this.isEnabled() &&
           !plugin.setHotKey(screenCaptureHotKey.charCodeAt(0))) {
-        chrome.tabs.create({
-          url: 'options.html#failed-to-resister-screen-capture-hot-key'
-        });
+        this.set('screen', '@'); // Disable hot key for screen capture.
       }
     },
 
