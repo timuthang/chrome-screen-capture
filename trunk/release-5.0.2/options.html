@@ -1,0 +1,428 @@
+<!--
+ * Copyright (c) 2009 The Chromium Authors. All rights reserved.  Use of this
+ * source code is governed by a BSD-style license that can be found in the
+ * LICENSE file.
+-->
+<html>
+ <head>
+  <title> Screen Capture Options </title>
+  <meta charset="utf-8">
+  <style>
+  body {
+    font-family: arial, sans-serif;
+    margin:10px;
+    background: #EBEFF9;
+    font-size: 13px;
+  }
+  #header {
+    padding-bottom:1em;
+    padding-top:1em;
+  }
+  #header h1 {
+    font-size: 30px;
+    display: inline;
+    color: #3d5d6a;
+    padding-bottom: 40px;
+    padding-left: 90px;
+    padding-top: 70px;
+    background: url(images/icon_48.png) no-repeat;
+    background-position: 1px 62px;
+  }
+  h4 {
+    padding-left: 0.5em;
+    border-bottom: 2px dotted #c3c3c3;
+    color: #333333;
+    line-height: 28px;
+    font-size: 15px;
+  }
+  p {
+    padding-left: 2em;
+    font-family: verdana, arial, sans-serif, simsun;
+    font-size: 14px;
+  }
+  input {
+    cursor: pointer;
+  }
+  .section-header {
+    background: #ebeff9;
+    border-top: 1px solid #b5c7de;
+    font-size: 99%;
+    padding: 3px 0 2px 5px;
+    font-weight: bold;
+    margin-bottom: 1em;
+    margin-top: 1em;
+  }
+  .contentBox {
+    background-color: #ffffff;
+    border: 3px solid #bec9ce;
+    border-bottom-left-radius: 20px 20px;
+    border-bottom-right-radius: 20px 20px;
+    border-top-left-radius: 20px 20px;
+    border-top-right-radius: 20px 20px;
+    padding: 30px;
+    text-align: left;
+    margin: 50px auto 20px auto;
+    height: auto;
+    width: 600px;
+  }
+  .section-content {
+    padding-left: 80px;
+    line-height: 25px;
+  }
+  .colorBox {
+    width: 60px;
+    height: 20px;
+    margin: 3px 0 0 2px;
+  }
+  #colorpad {
+    position: absolute;
+    word-wrap: break-word;
+    word-break: normal;
+    z-index: 10;
+    border: #000000 solid 1px;
+    background-color: #ffffff;
+    padding: 5px;
+    width: 393px;
+  }
+  #colorpad a {
+    margin: 2px;
+    padding: 1px;
+    display: block;
+    height: 20px;
+    width: 20px;
+    float: left;
+    border: 1px solid #333333;
+  }
+  .contentLeft {
+    float: left;
+    width: 100px;
+    line-height: 28px;
+  }
+  .contentRight {
+    float: left;
+  }
+  .clear {
+    clear: both;
+  }
+  .section-content {
+    padding-left: 55px;
+  }
+  .closeBtn {
+    margin: 20px 0 0 0;
+  }
+  #footer {
+    text-align: center;
+    font-size: 13px;
+  }
+  #filePath {
+    background:#ebebe4;
+    border: 1px solid #7f9db9;
+    color:#aca799;
+    line-height: 18px;
+  }
+  #hot-key-setting {
+    margin: 26px 0 0 80px;
+  }
+  .hot-key {
+    display: inline-block;
+    width: 200px;
+    margin: 0 30px 5px 0;
+  }
+  #hot-key-setting .capture-text {
+    margin-right: 10px;
+  }
+  #error-info {
+    margin: 5px 0 5px 80px;
+    color: red;
+  }
+  #screen-capture-hot-key-set-wrapper {
+    display: none;
+  }
+  </style>
+  <script>
+  var bg = chrome.extension.getBackgroundPage();
+  
+  function $(id) {
+    return document.getElementById(id);
+  }
+  
+  function isHighVersion() {
+    var version = navigator.userAgent.match(/Chrome\/(\d+)/)[1];
+    return version > 9;
+  }
+  
+  function init() {
+    i18nReplace('optionTitle', 'options');
+    i18nReplace('saveAndClose', 'save_and_close');
+    i18nReplace('screenshootQualitySetting', 'quality_setting');
+    i18nReplace('lossyScreenShot', 'lossy');
+    i18nReplace('losslessScreenShot', 'lossless');
+    i18nReplace('autosaveSetting', 'save_setting');
+    i18nReplace('shorcutSetting', 'shortcut_setting');
+    i18nReplace('settingShortcutText', 'shortcutsetting_text');
+    i18nReplace('defaultPath', 'save_tip');
+    i18nReplace('autosaveText', 'autosave');
+    i18nReplace('setSavePath', 'set_save_path');
+    i18nReplace('openSavePath', 'open_save_path');
+    if (isHighVersion()) {
+      $('lossyScreenShot').innerText += ' (JPEG)';
+      $('losslessScreenShot').innerText += ' (PNG)';
+    }
+    $('autosave').checked = eval(localStorage.autoSave);
+    $('filePath').value = localStorage.savePath =
+        localStorage.savePath ? localStorage.savePath : bg.plugin.getDefaultSavePath();
+    $('setSavePath').addEventListener('click', function() {
+      // Here we use the plugin object in options.html instead of the plugin object
+      // in background page, so that the SetSavePath dialog will be a modal dialog.
+      var pluginobj = $('pluginobj');
+      pluginobj.SetSavePath(localStorage.savePath, function(savePath) {
+        $('filePath').value = localStorage.savePath = savePath;
+      }, chrome.i18n.getMessage('set_save_path_title'));
+    });
+    $('openSavePath').addEventListener('click', function() {
+      bg.plugin.openSavePath(localStorage.savePath);
+    });
+    initScreenCaptureQuality();
+    HotKeySetting.setup();
+  }
+
+  function save() {
+     localStorage.screenshootQuality =
+         $('lossy').checked ? 'jpeg' : '' ||
+         $('lossless').checked ? 'png' : '';
+     localStorage.autoSave = $('autosave').checked;
+
+     return HotKeySetting.save();
+  }
+
+  function saveAndClose() {
+    if (save())
+      chrome.tabs.getSelected(null, function(tab) {
+        chrome.tabs.remove(tab.id);
+      });
+  }
+
+  function initScreenCaptureQuality() {
+    $('lossy').checked = localStorage.screenshootQuality == 'jpeg';
+    $('lossless').checked = localStorage.screenshootQuality == 'png';
+  }
+
+  function i18nReplace(id, name) {
+    return $(id).innerText = chrome.i18n.getMessage(name);
+  }
+
+  </script>
+ </head>
+<body onload="init();">
+  <div class="contentBox">
+    <div id="header">
+     <h1 id="optionTitle"></h1>
+    </div>
+    <h4 id="screenshootQualitySetting"></h4>
+    <div class="section-content">
+     <div>
+       <label></label><input id="lossy" type="radio" name="quality"><span id="lossyScreenShot"></span></label>
+       &nbsp; <label></label><input id="lossless" type="radio" name="quality"><span id="losslessScreenShot">
+       </span></label> </div>
+     <div class="clear"></div>
+    </div>
+    <div id="autosaveSettingDiv">
+    <h4 id="autosaveSetting"></h4>
+    <div class="section-content">
+     <div class="clear"></div>
+     <div id="defaultPath" style="margin-left:4px;"></div>
+     <div style="margin-left:2px;" ><input type="text" readonly id="filePath" size="40">
+       <button id="setSavePath"></button>
+       <button id="openSavePath"></button>
+     </div>
+     <div style="margin:5px 0 0 1px;">
+       <label><div style="float:left; margin-top:2px;">
+         <input type="checkbox" id="autosave">
+       </div>
+       <div style="margin-left:5px; width:480px; float:left;" id="autosaveText"></div></label>
+       </div><div class="clear"></div>
+    </div> </div>
+    <div id="shortcutSettingDiv" style="margin: 0px 0px 5px 0px">
+      <h4 id="shorcutSetting"></h4>
+      <div style="margin: 2px 0px 0px 56px">
+         <input type="checkbox" id="settingShortcut">
+         <label for="settingShortcut" id="settingShortcutText"></label>
+      </div>
+      <div id="hot-key-setting">
+        <span class="hot-key">
+          <label for="area-capture-hot-key" class="capture-text" id="area-capture-text"></label>
+          <span>Ctrl+Alt+<select id="area-capture-hot-key"></select></span>
+        </span>
+        <span class="hot-key">
+          <label for="viewport-capture-hot-key" class="capture-text" id="viewport-capture-text"></label>
+          <span>Ctrl+Alt+<select id="viewport-capture-hot-key"></select></span>
+        </span>
+        <span class="hot-key">
+          <label for="full-page-capture-hot-key" class="capture-text" id="full-page-capture-text"></label>
+          <span>Ctrl+Alt+<select id="full-page-capture-hot-key"></select></span>
+        </span>
+        <span id="screen-capture-hot-key-set-wrapper" class="hot-key">
+          <label for="screen-capture-hot-key" class="capture-text" id="screen-capture-text"></label>
+          <span>Ctrl+Alt+<select id="screen-capture-hot-key"></select></span>
+        </span>
+      </div>
+      <div id="error-info"></div>
+    </div>
+    <div class="closeBtn"><button id="saveAndClose" onclick="saveAndClose()"></button>
+    </div>
+  </div>
+  <div id="footer">&copy;2010 Google</div>
+  <embed id="pluginobj" width="0" height="0" type="application/x-screencapture">
+  <script src="hotkey_storage.js"></script>
+  <script src="ui.js"></script>
+  <script>
+    const CURRENT_LOCALE = chrome.i18n.getMessage('@@ui_locale');
+    if (CURRENT_LOCALE != 'zh_CN') {
+      UI.addStyleSheet('./i18n_styles/en_options.css');
+    }
+
+    function isWindowsOrLinuxPlatform() {
+      return navigator.userAgent.toLowerCase().indexOf('windows') > -1 ||
+          navigator.userAgent.toLowerCase().indexOf('linux') > -1;
+    }
+
+    var HotKeySetting = (function() {
+      const CHAR_CODE_OF_AT = 64;
+      const CHAR_CODE_OF_A = 65;
+      const CHAR_CODE_OF_Z = 90;
+      var hotKeySelection =
+        document.querySelectorAll('#hot-key-setting select');
+      var isWindowsOrLinux = isWindowsOrLinuxPlatform();
+
+      var hotkey = {
+        setup: function() {
+          // i18n.
+          $('area-capture-text').innerText =
+            chrome.i18n.getMessage('capture_area');
+          $('viewport-capture-text').innerText =
+            chrome.i18n.getMessage('capture_window');
+          $('full-page-capture-text').innerText =
+            chrome.i18n.getMessage('capture_webpage');
+          $('screen-capture-text').innerText =
+            chrome.i18n.getMessage('capture_screen');
+
+          for (var i = 0; i < hotKeySelection.length; i++) {
+            hotKeySelection[i].add(new Option('--', '@'));
+            for (var j = CHAR_CODE_OF_A; j <= CHAR_CODE_OF_Z; j++) {
+              var value = String.fromCharCode(j);
+              var option = new Option(value, value);
+              hotKeySelection[i].add(option);
+            }
+          }
+
+          $('area-capture-hot-key').selectedIndex =
+            HotKey.getCharCode('area') - CHAR_CODE_OF_AT;
+          $('viewport-capture-hot-key').selectedIndex =
+            HotKey.getCharCode('viewport') - CHAR_CODE_OF_AT;
+          $('full-page-capture-hot-key').selectedIndex =
+            HotKey.getCharCode('fullpage') - CHAR_CODE_OF_AT;
+          $('screen-capture-hot-key').selectedIndex =
+            HotKey.getCharCode('screen') - CHAR_CODE_OF_AT;
+
+          $('settingShortcut').addEventListener('click', function() {
+            hotkey.setState(this.checked);
+          }, false);
+
+          hotkey.setState(HotKey.isEnabled());
+          if (isWindowsOrLinux) {
+            // Capture screen region is not support on Linux and Mac platform.
+            $('screen-capture-hot-key-set-wrapper').style.display =
+                'inline-block';
+          }
+        },
+
+        validate: function() {
+          var hotKeyLength =
+            Array.prototype.filter.call(hotKeySelection,
+                function (element) {
+                  return element.value != '@'
+                }
+            ).length;
+          if (hotKeyLength != 0) {
+            var validateMap = {};
+            validateMap[hotKeySelection[0].value] = true;
+            validateMap[hotKeySelection[1].value] = true;
+            validateMap[hotKeySelection[2].value] = true;
+            if (isWindowsOrLinux) {
+              validateMap[hotKeySelection[3].value] = true;
+            } else {
+              if (hotKeySelection[3].value != '@')
+                hotKeyLength -= 1;
+            }
+
+            if (Object.keys(validateMap).length < hotKeyLength) {
+              ErrorInfo.show('hot_key_conflict');
+              return false;
+            }
+          }
+          ErrorInfo.hide();
+          return true;
+        },
+
+        save: function() {
+          var result = true;
+          if ($('settingShortcut').checked) {
+            if (this.validate()) {
+              HotKey.enable();
+              HotKey.set('area', $('area-capture-hot-key').value);
+              HotKey.set('viewport', $('viewport-capture-hot-key').value);
+              HotKey.set('fullpage', $('full-page-capture-hot-key').value);
+
+              if (isWindowsOrLinux) {
+                var screenCaptureHotKey = $('screen-capture-hot-key').value;
+                if (bg.plugin.setHotKey(screenCaptureHotKey.charCodeAt(0))) {
+                  HotKey.set('screen', screenCaptureHotKey);
+                } else {
+                  var i18nKey = 'failed_to_register_hot_key_for_screen_capture';
+                  ErrorInfo.show(i18nKey);
+                  this.focusScreenCapture();
+                  result = false;
+                }
+              }
+            } else {
+              result = false;
+            }
+          } else {
+            HotKey.disable();
+          }
+          return result;
+        },
+
+        setState: function(enabled) {
+          $('settingShortcut').checked = enabled;
+          UI.setStyle($('hot-key-setting'), 'color', enabled ? '' : '#6d6d6d');
+          for (var i = 0; i < hotKeySelection.length; i++) {
+            hotKeySelection[i].disabled = !enabled;
+          }
+          ErrorInfo.hide();
+        },
+
+        focusScreenCapture: function() {
+          $('screen-capture-hot-key').focus();
+        }
+      };
+      return hotkey;
+    })();
+
+    var ErrorInfo = (function() {
+      var infoWrapper = $('error-info');
+      return {
+        show: function(msgKey) {
+          var msg = chrome.i18n.getMessage(msgKey);
+          infoWrapper.innerText = msg;
+          UI.show(infoWrapper);
+        },
+
+        hide: function() {
+          UI.hide(infoWrapper);
+        }
+      };
+    })();
+  </script>
+</body>
+</html>
