@@ -277,6 +277,33 @@ bool ScreenCapturePlugin::SetHotKey(int keycode) {
   return false;
 }
 
+void ScreenCapturePlugin::DisableHotKey() {
+#ifdef _WINDOWS
+  if (get_native_window()) {
+    std::string hotkey = "CTRL+ALT+";
+    ATOM atom;
+    if (keycode_ != 0) {
+      hotkey += keycode_;
+      atom = GlobalFindAtomA(hotkey.c_str());
+      UnregisterHotKey(get_native_window(), atom);
+      keycode_ = 0;
+    }
+  }
+#elif GTK
+  Display* dpy = XOpenDisplay(NULL);
+  KeyBinder::Binding binding = {0};
+  binding.modifiers = ControlMask | Mod1Mask;
+  binding.handler = GrabKeyHandler;
+  binding.user_data = this;  
+  printf("this = %ld\n", this);
+  if (keycode_ != 0) {
+    binding.keycode = XKeysymToKeycode(dpy, keycode_);    
+    KeyBinder::UnGrabKey(&binding);
+    keycode_ = 0;
+  }
+#endif
+}
+
 void ScreenCapturePlugin::CaptureScreenCallback(unsigned char* image_data, 
                                                 int image_data_len) {
   NPObject* window;

@@ -61,6 +61,10 @@ public:
   bool SetHotKey(const NPVariant* args, uint32_t argCount,
                  NPVariant* result);
 
+  // Disable hot key.
+  bool DisableHotKey(const NPVariant* args, uint32_t argCount,
+                     NPVariant* result);
+
   // Get width of view port.
   bool GetViewPortWidth(const NPVariant* args, uint32_t argCount,
                         NPVariant* result);
@@ -79,7 +83,7 @@ private:
   bool GenerateUniqueFileName(const std::string& srcFile, 
                               std::string* destFile);
   static void InvokeCallback(NPP npp, NPObject* callback, const char* param);
-  static void InvokeCallback(NPP npp, NPObject* callback, bool param0, 
+  static void InvokeCallback(NPP npp, NPObject* callback, int param0, 
                              const char* param1 = NULL);
 #ifdef _WINDOWS
   bool PrintImageWin(HDC printer_dc, ImageType imagetype, 

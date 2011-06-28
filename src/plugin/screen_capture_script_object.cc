@@ -92,7 +92,11 @@ void ScreenCaptureScriptObject::InitHandler() {
   AddFunction(item);
   item.function_name = "GetViewPortWidth";
   item.function_pointer = ON_INVOKEHELPER(
-    &ScreenCaptureScriptObject::GetViewPortWidth);
+      &ScreenCaptureScriptObject::GetViewPortWidth);
+  AddFunction(item);
+  item.function_name = "DisableHotKey";
+  item.function_pointer = ON_INVOKEHELPER(
+      &ScreenCaptureScriptObject::DisableHotKey);
   AddFunction(item);
 }
 
@@ -164,11 +168,11 @@ void ScreenCaptureScriptObject::InvokeCallback(
 
 // static
 void ScreenCaptureScriptObject::InvokeCallback(
-    NPP npp, NPObject* callback, bool param0, const char* param1) {
+    NPP npp, NPObject* callback, int param0, const char* param1) {
   NPVariant npParam[2];
   int param_count = 0;
   char path[MAX_PATH] = "";
-  BOOLEAN_TO_NPVARIANT(param0, npParam[0]);
+  INT32_TO_NPVARIANT(param0, npParam[0]);
   param_count++;
   if (param1 != NULL) {
 #ifdef _WINDOWS
@@ -275,6 +279,7 @@ void ScreenCaptureScriptObject::OnDialogResponse(
   // Hide the dialog to prevent it from covering any alert dialog opened by
   // the JavaScript callback.
   gtk_widget_hide(GTK_WIDGET(dialog));
+  int ret_value = 2;
   if (response == GTK_RESPONSE_ACCEPT) {
     char* file = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
     if (dialog == GTK_DIALOG(save_dialog_)) {
@@ -295,11 +300,13 @@ void ScreenCaptureScriptObject::OnDialogResponse(
               postfix_index != (filename.length() - 4)) {
             filename += ".png";
           }
-        }          
-        InvokeCallback((NPP)userData, save_callback_,
-                       SaveFile(filename.c_str(), save_data_, 
-                                save_data_length_),
-                       filename.c_str());
+        }
+        if (SaveFile(filename.c_str(), save_data_, save_data_length_))
+          ret_value = 0;
+        else
+          ret_value = 1;
+        InvokeCallback((NPP)userData, save_callback_, ret_value, 
+                        filename.c_str());
         // To indicate the callback has already been invoked.
         ReleaseSaveCallback();
       }
@@ -307,6 +314,10 @@ void ScreenCaptureScriptObject::OnDialogResponse(
       InvokeCallback((NPP)userData, folder_callback_, file);
     }
     g_free(file);
+  } else {
+    if (dialog == GTK_DIALOG(save_dialog_)) {
+      InvokeCallback((NPP)userData, save_callback_, ret_value);
+    }
   }
   gtk_widget_destroy(GTK_WIDGET(dialog));
 }
@@ -674,8 +685,11 @@ bool ScreenCaptureScriptObject::AutoSave(
     return false;
 
   const char* url = (const char*)NPVARIANT_TO_STRING(args[0]).UTF8Characters;
+  int title_len = NPVARIANT_TO_STRING(args[1]).UTF8Length;
+  if (title_len + NPVARIANT_TO_STRING(args[2]).UTF8Length > MAX_PATH)
+    title_len = MAX_PATH - NPVARIANT_TO_STRING(args[2]).UTF8Length;
   std::string title(NPVARIANT_TO_STRING(args[1]).UTF8Characters,
-                    NPVARIANT_TO_STRING(args[1]).UTF8Length);
+                    title_len);
   std::string path(NPVARIANT_TO_STRING(args[2]).UTF8Characters,
                    NPVARIANT_TO_STRING(args[2]).UTF8Length);
 
@@ -842,8 +856,11 @@ bool ScreenCaptureScriptObject::SaveScreenshot(
     return false;
 
   const char* url = NPVARIANT_TO_STRING(args[0]).UTF8Characters;
+  int title_len = NPVARIANT_TO_STRING(args[1]).UTF8Length;
+  if (title_len + NPVARIANT_TO_STRING(args[2]).UTF8Length > MAX_PATH)
+    title_len = MAX_PATH - NPVARIANT_TO_STRING(args[2]).UTF8Length;
   std::string title(NPVARIANT_TO_STRING(args[1]).UTF8Characters,
-                    NPVARIANT_TO_STRING(args[1]).UTF8Length);
+                    title_len);
   std::string path(NPVARIANT_TO_STRING(args[2]).UTF8Characters,
                    NPVARIANT_TO_STRING(args[2]).UTF8Length);
   NPObject* callback = NPVARIANT_TO_OBJECT(args[3]);
@@ -904,10 +921,14 @@ bool ScreenCaptureScriptObject::SaveScreenshot(
   Ofn.Flags = OFN_SHOWHELP | OFN_OVERWRITEPROMPT;
   Ofn.lpstrTitle = sz_dialog_title;
 
-  InvokeCallback(
-      get_plugin()->get_npp(), callback,
-      !GetSaveFileNameA(&Ofn) || SaveFileBase64(sz_file, base64, base64size),
-      sz_file);
+  int ret_value = 2;  // 0-Success, 1-Save fail, 2-User cancel.
+  if (GetSaveFileNameA(&Ofn)) {
+    if (SaveFileBase64(sz_file, base64, base64size))
+      ret_value = 0;
+    else
+      ret_value = 1;
+  }
+  InvokeCallback(get_plugin()->get_npp(), callback, ret_value, sz_file);
 
 #elif defined GTK
   ReleaseSaveCallback();
@@ -964,10 +985,14 @@ bool ScreenCaptureScriptObject::SaveScreenshot(
   std::string file = GetSaveFileName(title.c_str(), path.c_str(), 
                                      dialog_title.c_str(),
                                      postfix.substr(1).c_str());
-  InvokeCallback(
-      get_plugin()->get_npp(), callback,
-      file.empty() || SaveFileBase64(file.c_str(), base64, base64size),
-      file.c_str());
+  int ret_value = 2;  // 0-Success, 1-Save fail, 2-User cancel.
+  if (!file.empty()) {
+    if (SaveFileBase64(file.c_str(), base64, base64size))
+      ret_value = 0;
+    else
+      ret_value = 1;
+  }
+  InvokeCallback(get_plugin()->get_npp(), callback, ret_value, file.c_str());
 #endif
 
   return true;
@@ -1026,6 +1051,15 @@ bool ScreenCaptureScriptObject::SetHotKey(const NPVariant* args,
   bool ret = plugin->SetHotKey(keycode);
   BOOLEAN_TO_NPVARIANT(ret, *result);
 
+  return true;
+}
+
+bool ScreenCaptureScriptObject::DisableHotKey(const NPVariant* args, 
+                                              uint32_t argCount, 
+                                              NPVariant* result) {
+  VOID_TO_NPVARIANT(*result);
+  ScreenCapturePlugin* plugin = (ScreenCapturePlugin*)get_plugin();
+  plugin->DisableHotKey();
   return true;
 }
 
