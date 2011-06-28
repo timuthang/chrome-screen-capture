@@ -28,6 +28,7 @@ public:
   void CaptureScreen();
   void CaptureScreenCallback(unsigned char* image_data, int image_data_len);
   bool SetHotKey(int keycode);
+  void DisableHotKey();
 
 #ifdef _WINDOWS
   void SetButtonMessage(WCHAR* ok_caption, WCHAR* cancel_caption);  
