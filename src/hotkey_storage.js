@@ -44,8 +44,9 @@ var HotKey = (function() {
       localStorage.setItem('hot_key_enabled', true);
     },
 
-    disable: function() {
+    disable: function(bg) {
       localStorage.setItem('hot_key_enabled', false);
+      bg.plugin.disableScreenCaptureHotKey();
     },
 
     isEnabled: function() {

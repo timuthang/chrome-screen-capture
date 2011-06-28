@@ -44,6 +44,10 @@ var plugin = {
     return this.pluginObj.SetHotKey(keyCode);
   },
 
+  disableScreenCaptureHotKey: function() {
+    return this.pluginObj.DisableHotKey();
+  },
+
   getViewPortWidth: function() {
     try {
       return this.pluginObj.GetViewPortWidth();
