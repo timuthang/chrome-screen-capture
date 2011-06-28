@@ -719,10 +719,10 @@
         localStorage.lastSavePath = localStorage.savePath;
       pluginobj.SaveScreenshot(
           dataUrl, photoshop.tabTitle, localStorage.lastSavePath,
-          function(success, path) {
+          function(result, path) {
             var message = chrome.i18n.getMessage('save_fail');
             var messageClass = 'tip_failed';
-            if (success && path) {
+            if (result == 0 && path) {
               var i18nMessage = chrome.i18n.getMessage('saved_to_path');
               message = i18nMessage + '<a title="' + path +
                   '" onclick="bg.plugin.openSavePath(\'' +
@@ -730,7 +730,8 @@
               messageClass = 'tip_succeed';
               localStorage.lastSavePath = path;
             }
-            photoshop.showTip(messageClass, message, 5000);
+            if (result != 2)
+              photoshop.showTip(messageClass, message, 5000);
           },
           chrome.i18n.getMessage("save_image"));
       photoshop.finish();
