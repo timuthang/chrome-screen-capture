@@ -31,10 +31,12 @@ public:
   void DisableHotKey();
 
 #ifdef _WINDOWS
-  void SetButtonMessage(WCHAR* ok_caption, WCHAR* cancel_caption);  
+  void SetMessage(WCHAR* ok_caption, WCHAR* cancel_caption,   
+                  WCHAR* tip_message);  
   static LRESULT WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 #elif GTK
-  void SetButtonMessage(const char* ok_caption, const char* cancel_caption);  
+  void SetMessage(const char* ok_caption, const char* cancel_caption,
+                  const char* tip_message);  
 #endif
 
 private:

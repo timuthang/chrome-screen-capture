@@ -6,6 +6,7 @@
 
 std::wstring CaptureWindow::ok_caption_ = L"Ok";
 std::wstring CaptureWindow::cancel_caption_ = L"Cancel";
+std::wstring CaptureWindow::tip_message_ = L"";
 
 CaptureWindow::CaptureWindow() {
   original_picture_dc_ = NULL;
@@ -14,6 +15,7 @@ CaptureWindow::CaptureWindow() {
   mem_dc_ = NULL;
   memset(&selected_rect_, 0, sizeof(selected_rect_));
   state_ = kNoCapture;
+  tip_message_top_ = 0;
 }
 
 CaptureWindow::~CaptureWindow() {
@@ -142,10 +144,11 @@ void CaptureWindow::OnPaint() {
   DrawSelectRegion(pt, false);
 }
 
-void CaptureWindow::SetButtonMessage(WCHAR* ok_message, 
-                                     WCHAR* cancel_message) {
+void CaptureWindow::SetMessage(WCHAR* ok_message, WCHAR* cancel_message,
+                               WCHAR* tip_message) {
   ok_caption_ = ok_message;
   cancel_caption_ = cancel_message;
+  tip_message_ = tip_message;
 }
 
 void CaptureWindow::OnMouseMove(POINT pt) {
@@ -226,6 +229,80 @@ void CaptureWindow::DrawSelectRegion(POINT pt, bool compulte_select_region) {
          selected_rect_.bottom - selected_rect_.top, 
          original_picture_dc_, selected_rect_.left, selected_rect_.top, 
          SRCCOPY);
+
+  if (state_ == kNoCapture) {
+    // Draw tip message.
+    int height = -MulDiv(14, GetDeviceCaps(mem_dc_, LOGPIXELSY), 72);
+
+    HFONT font = CreateFont(height, 0, 0, 0, FW_NORMAL, FALSE, TRUE, FALSE, 
+                            DEFAULT_CHARSET, OUT_STROKE_PRECIS, 
+                            CLIP_STROKE_PRECIS, PROOF_QUALITY, 
+                            VARIABLE_PITCH | FF_SWISS, _T("Arial"));
+    if (!font)
+      font = CreateFont(height, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,  
+                        DEFAULT_CHARSET, OUT_STROKE_PRECIS, 
+                        CLIP_STROKE_PRECIS, PROOF_QUALITY, 
+                        VARIABLE_PITCH | FF_SWISS, NULL);
+
+    HFONT old_font = (HFONT)SelectObject(mem_dc_, font);
+    SIZE size;
+    GetTextExtentPoint32(mem_dc_, tip_message_.c_str(), 
+                         tip_message_.length(), &size);
+    SelectObject(mem_dc_, old_font);
+
+    RECT rect = {0};
+    const int round_width = 10;
+    rect.left = (window_width_ - size.cx) / 2;
+    rect.right = rect.left + size.cx + round_width * 2;  // Add 20 pixel.
+    rect.top = tip_message_top_ - round_width;
+    tip_message_top_ -= 2;
+    rect.bottom = rect.top + round_width + size.cy * 2;  // Mul 2.
+
+    if (rect.bottom > 0) {
+      HBRUSH gray_brush = CreateSolidBrush(RGB(55, 55, 55));
+      HPEN gray_pen = CreatePen(PS_SOLID, 0, RGB(55, 55, 55));
+
+      HBITMAP temp_bmp = CreateCompatibleBitmap(
+          mem_dc_, rect.right - rect.left, rect.bottom - rect.top);
+      HDC temp_dc = CreateCompatibleDC(mem_dc_);
+      SelectObject(temp_dc, temp_bmp);
+      old_font = (HFONT)SelectObject(temp_dc, font);
+      BitBlt(temp_dc, 0, 0, rect.right - rect.left, rect.bottom - rect.top,
+             mem_dc_, rect.left, rect.top, SRCCOPY);
+
+      SetBkMode(temp_dc, OPAQUE);
+      SetBkColor(temp_dc, RGB(55, 55, 55));
+      SetTextColor(temp_dc, RGB(255, 255, 255));
+      HBRUSH old_brush = (HBRUSH)SelectObject(temp_dc, gray_brush);
+      HPEN old_pen = (HPEN)SelectObject(temp_dc, gray_pen);
+
+      RoundRect(temp_dc, 0, 0, rect.right - rect.left, rect.bottom - rect.top, 
+                round_width, round_width);
+      TextOut(temp_dc, round_width, 
+              rect.bottom - rect.top - size.cy - round_width, 
+              tip_message_.c_str(), tip_message_.length());
+
+      BLENDFUNCTION bm;
+      bm.BlendOp = AC_SRC_OVER;
+      bm.BlendFlags = 0;
+      bm.SourceConstantAlpha = 200;
+      bm.AlphaFormat = 0; 
+      AlphaBlend(mem_dc_, rect.left, rect.top, 
+                 rect.right - rect.left, rect.bottom - rect.top, 
+                 temp_dc, 0, 0, rect.right - rect.left, 
+                 rect.bottom - rect.top, bm);
+
+      SelectObject(temp_dc, old_font);
+      SelectObject(temp_dc, old_pen);
+      SelectObject(temp_dc, old_brush);
+      DeleteObject(gray_brush);
+      DeleteObject(gray_pen);
+
+      DeleteDC(temp_dc);
+      DeleteObject(temp_bmp);
+    }
+    DeleteObject(font);
+  }
 
   HBRUSH blue_brush = CreateSolidBrush(RGB(0, 0, 255));
 

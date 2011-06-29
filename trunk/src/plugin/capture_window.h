@@ -32,7 +32,8 @@ public:
   void OnSetCursor() { SetCursor(display_cursor_); }
   void OnPaint();
 
-  static void SetButtonMessage(WCHAR* ok_message, WCHAR* cancel_message);
+  static void SetMessage(WCHAR* ok_message, WCHAR* cancel_message,
+                         WCHAR* tip_message);
 
   // Image data functions.
   BYTE* GetImageData(int* len);
@@ -63,8 +64,11 @@ private:
   int window_width_;
   int window_height_;
 
+  int tip_message_top_;
+
   static std::wstring ok_caption_;
   static std::wstring cancel_caption_;
+  static std::wstring tip_message_;
 };
 
 #endif

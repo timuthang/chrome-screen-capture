@@ -9,6 +9,7 @@
 
 std::string CaptureLinux::ok_caption_ = "OK";
 std::string CaptureLinux::cancel_caption_ = "Cancel";
+std::string CaptureLinux::tip_message_ = "";
 
 bool PtInRect(XRectangle* rect, XPoint pt) {
   if (pt.x >= rect->x && pt.x <= rect->x + rect->width &&
@@ -17,7 +18,7 @@ bool PtInRect(XRectangle* rect, XPoint pt) {
   return false;
 }
 
-typedef struct ImageData {
+struct ImageData {
   unsigned char* image_data;  
   int image_data_len;
   int image_max_length;
@@ -31,6 +32,7 @@ CaptureLinux::CaptureLinux() {
   fontset_ = NULL;
   memset(&selected_rect_, 0, sizeof(selected_rect_));
   state_ = kNoCapture;
+  tip_message_top_ = 0;
 }
 
 CaptureLinux::~CaptureLinux() {
@@ -153,8 +155,24 @@ int CaptureLinux::Show() {
   
   XPoint pt;
   XEvent e;
-  while (true) {    
-    XNextEvent(display_, &e);    
+  int loop = 0;
+  bool flag = false;
+  time_t start_time = time(NULL);
+  while (true) {
+    if (state_ == kNoCapture) {
+      if (XPending(display_))
+        XNextEvent(display_, &e);
+      else {
+        if (flag && (++loop % 10) == 0)
+          OnPaint();
+        usleep(1);
+        if (time(NULL) - start_time > 3)
+          flag = true;
+        continue;
+      }
+    } else {
+      XNextEvent(display_, &e);
+    }
     switch(e.type) {
       case KeyPress:        
         if (e.xkey.keycode == XKeysymToKeycode(display_, XK_Escape))
@@ -273,10 +291,12 @@ void CaptureLinux::OnPaint() {
   DrawSelectRegion(pt, false);
 }
 
-void CaptureLinux::SetButtonMessage(const char* ok_message, 
-                                    const char* cancel_message) {
+void CaptureLinux::SetMessage(const char* ok_message, 
+                              const char* cancel_message,
+                              const char* tip_message) {
   ok_caption_ = ok_message;
   cancel_caption_ = cancel_message;
+  tip_message_ = tip_message;
 }
 
 void CaptureLinux::OnMouseMove(XPoint pt) {
@@ -373,8 +393,50 @@ void CaptureLinux::DrawSelectRegion(XPoint pt,
             selected_rect_.x, selected_rect_.y, 
             selected_rect_.width, selected_rect_.height);
   
-  XSetForeground(display_, gc, 0x0000FF);
+  if (state_ == kNoCapture) {
+    // Draw tip message.
+    XRectangle overall_ink_return, overall_logical_return;
+    
+    Xutf8TextExtents(fontset_, tip_message_.c_str(), tip_message_.length(),
+                     &overall_ink_return, &overall_logical_return);
 
+    XRectangle rect = {0};
+    const int round_width = 10;
+    
+    rect.x = (window_width_ - overall_logical_return.width) / 2;
+    rect.y = tip_message_top_ - round_width;
+    tip_message_top_ -= 2;
+    // Add 40 pixel.
+    rect.width = overall_logical_return.width + round_width * 2;
+    // Mul 2.
+    rect.height = round_width + overall_logical_return.height * 2;
+
+    if (rect.y + rect.height > 0) {
+      XSetForeground(display_, gc, 0x555555);
+      XFillRectangle(display_, mem_pixmap_, gc, rect.x, rect.y, 
+                     rect.width, rect.height);
+      XFillRectangle(display_, mem_pixmap_, gc, rect.x + round_width, 
+                     rect.y + rect.height,
+                     rect.width - 2 * round_width, round_width);
+      XFillArc(display_, mem_pixmap_, gc, rect.x, 
+               rect.y + rect.height - round_width,
+               round_width * 2, round_width * 2, 180 * 64, 90 * 64);
+      XFillArc(display_, mem_pixmap_, gc, 
+               rect.x + rect.width - round_width * 2, 
+               rect.y + rect.height - round_width,
+               round_width * 2, round_width * 2, 270 * 64, 90 * 64);
+      XSetForeground(display_, gc, 0xFFFFFF);
+      Xutf8DrawString(display_, mem_pixmap_, fontset_, gc, 
+                      rect.x + round_width, rect.y + rect.height, 
+                      tip_message_.c_str(), tip_message_.length());
+    }
+    XCopyArea(display_, mem_pixmap_, window_, gc, 
+              0, 0, window_width_, window_height_, 0, 0);
+    XFreeGC(display_, gc);
+    return;
+  }
+
+  XSetForeground(display_, gc, 0x0000FF);
   // Draw border and corner.
   XDrawRectangle(display_, mem_pixmap_, gc, 
                  selected_rect_.x, selected_rect_.y, 

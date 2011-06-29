@@ -82,9 +82,9 @@ void ScreenCaptureScriptObject::InitHandler() {
   item.function_pointer = ON_INVOKEHELPER(
       &ScreenCaptureScriptObject::CaptureScreen);
   AddFunction(item);
-  item.function_name = "SetButtonMessage";
+  item.function_name = "SetMessage";
   item.function_pointer = ON_INVOKEHELPER(
-      &ScreenCaptureScriptObject::SetButtonMessage);
+      &ScreenCaptureScriptObject::SetMessage);
   AddFunction(item);
   item.function_name = "SetHotKey";
   item.function_pointer = ON_INVOKEHELPER(
@@ -317,6 +317,8 @@ void ScreenCaptureScriptObject::OnDialogResponse(
   } else {
     if (dialog == GTK_DIALOG(save_dialog_)) {
       InvokeCallback((NPP)userData, save_callback_, ret_value);
+      // To indicate the callback has already been invoked.
+      ReleaseSaveCallback();
     }
   }
   gtk_widget_destroy(GTK_WIDGET(dialog));
@@ -1007,11 +1009,11 @@ bool ScreenCaptureScriptObject::CaptureScreen(const NPVariant* args,
   return true;
 }
 
-bool ScreenCaptureScriptObject::SetButtonMessage(const NPVariant* args, 
-                                                 uint32_t argCount, 
-                                                 NPVariant* result) {
-  if (argCount != 2 || !NPVARIANT_IS_STRING(args[0]) ||
-      !NPVARIANT_IS_STRING(args[1]))
+bool ScreenCaptureScriptObject::SetMessage(const NPVariant* args, 
+                                           uint32_t argCount, 
+                                           NPVariant* result) {
+  if (argCount != 3 || !NPVARIANT_IS_STRING(args[0]) ||
+      !NPVARIANT_IS_STRING(args[1]) || !NPVARIANT_IS_STRING(args[2]))
     return false;
   
 #ifdef _WINDOWS
@@ -1020,18 +1022,23 @@ bool ScreenCaptureScriptObject::SetButtonMessage(const NPVariant* args,
   utils::Utf8ToUnicode cancel_caption(
       NPVARIANT_TO_STRING(args[1]).UTF8Characters,
       NPVARIANT_TO_STRING(args[1]).UTF8Length);
+  utils::Utf8ToUnicode tip_message(NPVARIANT_TO_STRING(args[2]).UTF8Characters,
+                                   NPVARIANT_TO_STRING(args[2]).UTF8Length);
 
   ScreenCapturePlugin* plugin = (ScreenCapturePlugin*)get_plugin();
   if (plugin)
-    plugin->SetButtonMessage(ok_caption, cancel_caption);
+    plugin->SetMessage(ok_caption, cancel_caption, tip_message);
 #elif GTK
   std::string ok_caption(NPVARIANT_TO_STRING(args[0]).UTF8Characters,
                          NPVARIANT_TO_STRING(args[0]).UTF8Length);
   std::string cancel_caption(NPVARIANT_TO_STRING(args[1]).UTF8Characters,
                              NPVARIANT_TO_STRING(args[1]).UTF8Length);
+  std::string tip_message(NPVARIANT_TO_STRING(args[2]).UTF8Characters,
+                          NPVARIANT_TO_STRING(args[2]).UTF8Length);
   ScreenCapturePlugin* plugin = (ScreenCapturePlugin*)get_plugin();
   if (plugin)
-    plugin->SetButtonMessage(ok_caption.c_str(), cancel_caption.c_str());
+    plugin->SetMessage(ok_caption.c_str(), cancel_caption.c_str(), 
+                       tip_message.c_str());
 #endif
   return true;
 }

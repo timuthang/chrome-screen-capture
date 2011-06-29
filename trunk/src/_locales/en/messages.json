@@ -13,6 +13,7 @@
   "capturing": {"message": "Capturing, please wait..."},
   "cancel": {"message": "Cancel"},
   "ok": {"message": "OK"},
+  "capture_tip": {"message": "Drag and Capture (Press Esc to Exit)"},
   "highlight": {"message": "Highlight"},
   "border": {"message": "Draw Border Only"},
   "rect": {"message": "Fill Entire Area"},

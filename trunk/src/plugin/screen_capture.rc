@@ -71,8 +71,8 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,0,2
- PRODUCTVERSION 1,0,0,2
+ FILEVERSION 1,0,0,3
+ PRODUCTVERSION 1,0,0,3
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -89,13 +89,13 @@ BEGIN
         BEGIN
             VALUE "FileDescription", "This is a npapi plugin built for Chrome on Windows."
             VALUE "FileOpenName", "Screen Capture Plugin"
-            VALUE "FileVersion", "1, 0, 0, 2"
+            VALUE "FileVersion", "1, 0, 0, 3"
             VALUE "InternalName", "ScreenCapturePlugin"
             VALUE "LegalCopyright", "Copyright 2010 Jing Zhao"
             VALUE "MIMEType", "application/x-screencapture"
             VALUE "OriginalFilename", "screen_capture.dll"
             VALUE "ProductName", "Screen Capture Plugin"
-            VALUE "ProductVersion", "1, 0, 0, 2"
+            VALUE "ProductVersion", "1, 0, 0, 3"
         END
     END
     BLOCK "VarFileInfo"

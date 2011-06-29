@@ -106,9 +106,16 @@ INT_PTR CALLBACK Preview(HWND hDlg, UINT message,
         capture->SetWindowHandle(hDlg);
         SetWindowLong(hDlg, GWL_USERDATA, (LONG)capture);
         capture->OnPaint();
+        SetTimer(hDlg, 1001, 3000, NULL);
       }
       return TRUE;
     }
+    case WM_TIMER:
+      if (wParam == 1001) {
+        SetTimer(hDlg, 1001, 10, NULL);
+        capture->OnPaint();
+      }
+      break;
     case WM_SETCURSOR:
       if (capture)
         capture->OnSetCursor();
@@ -224,14 +231,15 @@ void ScreenCapturePlugin::CaptureScreen() {
 }
 
 #ifdef _WINDOWS
-void ScreenCapturePlugin::SetButtonMessage(WCHAR* ok_caption, 
-                                           WCHAR* cancel_caption) {
-  CaptureWindow::SetButtonMessage(ok_caption, cancel_caption);
+void ScreenCapturePlugin::SetMessage(WCHAR* ok_caption, WCHAR* cancel_caption,
+                                     WCHAR* tip_message) {
+  CaptureWindow::SetMessage(ok_caption, cancel_caption, tip_message);
 }
 #elif GTK
-void ScreenCapturePlugin::SetButtonMessage(const char* ok_caption, 
-                                           const char* cancel_caption) {
-  CaptureLinux::SetButtonMessage(ok_caption, cancel_caption);
+void ScreenCapturePlugin::SetMessage(const char* ok_caption, 
+                                     const char* cancel_caption,
+                                     const char* tip_message) {
+  CaptureLinux::SetMessage(ok_caption, cancel_caption, tip_message);
 }
 #endif
 

@@ -33,11 +33,12 @@ var plugin = {
     this.pluginObj.CaptureScreen();
   },
 
-  setButtonCaption: function() {
+  setMessage: function() {
     var ok = chrome.i18n.getMessage('ok');
     var cancel = chrome.i18n.getMessage('cancel');
-    if (this.pluginObj.SetButtonMessage)
-      this.pluginObj.SetButtonMessage(ok, cancel);
+    var tipMessage = chrome.i18n.getMessage('capture_tip');
+    if (this.pluginObj.SetMessage)
+      this.pluginObj.SetMessage(ok, cancel, tipMessage);
   },
 
   setHotKey: function(keyCode) {
@@ -388,7 +389,7 @@ var screenshot = {
   },
 
   init: function() {
-    plugin.setButtonCaption();
+    plugin.setMessage();
     var savePath = plugin.getDefaultSavePath();
     localStorage.savePath = localStorage.savePath ?
         localStorage.savePath : savePath;
