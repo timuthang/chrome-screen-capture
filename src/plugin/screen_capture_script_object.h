@@ -53,9 +53,9 @@ public:
   bool CaptureScreen(const NPVariant* args, uint32_t argCount,
                      NPVariant* result);
 
-  // Set i18n button message for displaying in capture procedure.
-  bool SetButtonMessage(const NPVariant* args, uint32_t argCount,
-                        NPVariant* result);
+  // Set i18n message for displaying in capture procedure.
+  bool SetMessage(const NPVariant* args, uint32_t argCount,
+                  NPVariant* result);
 
   // Set hot key.
   bool SetHotKey(const NPVariant* args, uint32_t argCount,

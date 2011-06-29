@@ -11,6 +11,7 @@
   "capturing": {"message": "截图中，请稍候..."},
   "cancel": {"message": "取消"},
   "ok": {"message": "截图"},
+  "capture_tip": {"message": "拖动鼠标截图（按Esc退出）"},
   "highlight": {"message":" 高亮标记"},
   "border": {"message": "高亮区域只画边框"},
   "rect": {"message": "填充高亮区域"},

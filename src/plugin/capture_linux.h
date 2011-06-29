@@ -36,8 +36,8 @@ public:
 
   void SetCursor() { XDefineCursor(display_, window_, display_cursor_); }
   
-  static void SetButtonMessage(const char* ok_message, 
-                               const char* cancel_message);
+  static void SetMessage(const char* ok_message, const char* cancel_message,
+                         const char* tip_message);
 
   // Image data functions.
   unsigned char* GetImageData(int* len);
@@ -71,8 +71,11 @@ private:
   int window_width_;
   int window_height_;
 
+  int tip_message_top_;
+
   static std::string ok_caption_;
   static std::string cancel_caption_;
+  static std::string tip_message_;
 };
 
 #endif
