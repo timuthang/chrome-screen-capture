@@ -24,6 +24,7 @@ var UploadUI = {
     UploadUI.registerSite(SinaMicroblog.siteId, SinaMicroblog);
     UploadUI.registerSite(Facebook.siteId, Facebook);
     UploadUI.registerSite(Picasa.siteId, Picasa);
+    UploadUI.registerSite(Imgur.siteId, Imgur);
     
     // Import style sheet for current locale
     if (CURRENT_LOCALE == 'zh_CN')
@@ -40,6 +41,7 @@ var UploadUI = {
     i18nReplace('closeUploadWrapper', 'close_upload_wrapper');
     i18nReplace('imageCaptionText', 'image_caption');
     i18nReplace('photoSizeTip', 'photo_size_tip');
+    i18nReplace('shareToImgurText', Imgur.siteId + '_upload_header');
     $('requiredFlag').setAttribute('title',
       chrome.i18n.getMessage('invalid_caption'));
 
@@ -57,6 +59,9 @@ var UploadUI = {
     }, false);
     $('sinaMicroblogBtn').addEventListener('click', function() {
       UploadUI.showUploadContentWrapper(SinaMicroblog.siteId);
+    }, false);
+    $('imgurBtn').addEventListener('click', function() {
+      UploadUI.showUploadContentWrapper(Imgur.siteId);
     }, false);
     $('shareToOtherAccount').addEventListener('click', function() {
       var currentSite = UploadUI.currentSite;

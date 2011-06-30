@@ -86,5 +86,9 @@
   "share_to_picasa_account": {"message": "分享到你的 Picasa Web 账号"},
   "invalid_album_id": {"message": "相册不存在。"},
   "saved_to_path": {"message": "图片已保存至 "},
-  "option": {"message": "选 项"}
+  "option": {"message": "选 项"},
+  "imgur_upload_header": {"message": "分享到 Imgur"},
+  "share_to_imgur_account": {"message": "分享到你的 Imgur 账户"},
+  "imgur_failed_to_get_request_token": {"message": "无法获取 request token，请稍候再试。"},
+  "imgur_failed_to_get_access_token": {"message": "无法获取 access token，请稍候再试。"}
 }
