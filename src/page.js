@@ -276,6 +276,20 @@ var page = {
     }
   },
 
+  getViewPortSize: function() {
+    var result = {
+      width: document.documentElement.clientWidth,
+      height: document.documentElement.clientHeight
+    };
+
+    if (document.compatMode == 'BackCompat') {
+      result.width = document.body.clientWidth;
+      result.height = document.body.clientHeight;
+    }
+
+    return result;
+  },
+
   /**
    * Check if the page is only made of invisible embed elements.
    */
@@ -316,8 +330,8 @@ var page = {
         case 'capture_window': response(page.getWindowSize()); break;
         case 'show_selection_area': page.showSelectionArea(); break;
         case 'scroll_init': // Capture whole page.
-          response(page.scrollInit(
-              0, 0, document.width, document.height, 'captureWhole'));
+          response(page.scrollInit(0, 0, document.body.scrollWidth,
+              document.body.scrollHeight, 'captureWhole'));
           break;
         case 'scroll_next':
           page.visibleWidth = request.visibleWidth;
@@ -349,8 +363,8 @@ var page = {
     this.hookBodyScrollValue(true);
     page.captureHeight = canvasHeight;
     page.captureWidth = canvasWidth;
-    var docWidth = document.width;
-    var docHeight = document.height;
+    var docWidth = document.body.scrollWidth;
+    var docHeight = document.body.scrollHeight;
     window.scrollTo(startX, startY);
 
     this.handleFixedElements('top_left');
@@ -369,6 +383,7 @@ var page = {
     page.scrollYCount = 1;
     page.scrollX = window.scrollX; // document.body.scrollLeft
     page.scrollY = window.scrollY;
+    var viewPortSize = page.getViewPortSize();
     return {
       'msg': 'scroll_init_done',
       'startX': page.calculateSizeAfterZooming(startX),
@@ -377,8 +392,8 @@ var page = {
       'scrollY': window.scrollY,
       'docHeight': docHeight,
       'docWidth': docWidth,
-      'visibleWidth': document.documentElement.clientWidth,
-      'visibleHeight': document.documentElement.clientHeight,
+      'visibleWidth': viewPortSize.width,
+      'visibleHeight': viewPortSize.height,
       'canvasWidth': canvasWidth,
       'canvasHeight': canvasHeight,
       'scrollXCount': 0,
@@ -397,10 +412,10 @@ var page = {
     }
     if (page.scrollXCount * page.visibleHeight < page.captureHeight) {
       this.restoreBottomRightOfFixedPositionElements();
-      var doc = document.documentElement;
+      var viewPortSize = page.getViewPortSize();
       window.scrollTo(
-          page.scrollYCount * doc.clientWidth + page.scrollX,
-          page.scrollXCount * doc.clientHeight + page.scrollY);
+          page.scrollYCount * viewPortSize.width + page.scrollX,
+          page.scrollXCount * viewPortSize.height + page.scrollY);
 
       var pagePosition = this.detectPagePosition();
       if (pagePosition) {
@@ -413,9 +428,9 @@ var page = {
       if (page.isGMailPage()) {
         var frame = document.getElementById('canvas_frame');
         frame.contentDocument.body.scrollLeft =
-            page.scrollYCount * doc.clientWidth;
+            page.scrollYCount * viewPortSize.width;
         frame.contentDocument.body.scrollTop =
-            page.scrollXCount * doc.clientHeight;
+            page.scrollXCount * viewPortSize.height;
         page.handleRightFloatBoxInGmail();
       }
       var x = page.scrollXCount;
