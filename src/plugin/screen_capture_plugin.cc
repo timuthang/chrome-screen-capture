@@ -157,11 +157,16 @@ LRESULT ScreenCapturePlugin::WndProc(HWND hWnd, UINT message,
         PostMessage(hWnd, WM_CAPTURESCREEN, 0, 0);
       break;
     case WM_CAPTURESCREEN: {
+      static bool capturing = false;
+      if (capturing)
+        break;
+      capturing = true;
       CaptureWindow* capture = new CaptureWindow;
       capture->CaptureScreen();
       HINSTANCE module = GetModuleHandle(_T("screen_capture.dll"));
       INT_PTR ret = DialogBoxParam(module, MAKEINTRESOURCE(IDD_PREVIEW), 
                                    hWnd, Preview, (LPARAM)capture);
+      capturing = false;
       if (ret == IDOK) {
         int image_data_len = 0;
         BYTE* image_data = capture->GetImageData(&image_data_len);
@@ -207,9 +212,15 @@ int MyErrorHandler(Display* display, XErrorEvent* error_event) {
   printf("%ld, type=%ld\n", display, error_event->type);
 }
 
-void GrabKeyHandler(uint keycode, uint modifiers, void* user_data) {
-  ScreenCapturePlugin* plugin = (ScreenCapturePlugin*)user_data;
+void* CaptureThread(void* param) {
+  ScreenCapturePlugin* plugin = (ScreenCapturePlugin*)param;
   plugin->CaptureScreen();
+  return 0;
+}
+
+void GrabKeyHandler(uint keycode, uint modifiers, void* user_data) {
+  pthread_t thread_id = 0;
+  pthread_create(&thread_id, NULL, CaptureThread, user_data);
 }
 #endif
 
@@ -217,6 +228,10 @@ void ScreenCapturePlugin::CaptureScreen() {
 #ifdef _WINDOWS
   PostMessage(get_native_window(), WM_CAPTURESCREEN, 0, 0);
 #elif GTK
+  static bool capturing = false;
+  if (capturing)
+    return;
+  capturing = true;
   XSetErrorHandler(MyErrorHandler);
   CaptureLinux capture;
   if (capture.CaptureScreen()) {
@@ -224,9 +239,10 @@ void ScreenCapturePlugin::CaptureScreen() {
       int image_data_len = 0;
       unsigned char* image_data = capture.GetImageData(&image_data_len);
       CaptureScreenCallback(image_data, image_data_len);
-      capture.FreeImageData(image_data);      
+      capture.FreeImageData(image_data);
     }
   }
+  capturing = false;
 #endif
 }
 
