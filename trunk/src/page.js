@@ -887,7 +887,7 @@ function $(id) {
 
 page.init();
 
-window.onresize = function() {
+window.addEventListener('resize', function() {
   if (page.isSelectionAreaTurnOn) {
     page.removeSelectionArea();
     page.showSelectionArea();
@@ -895,7 +895,7 @@ window.onresize = function() {
 
   // Reget original width of view port if browser window resized or page zoomed.
   page.getOriginalViewPortWidth();
-};
+}, false);
 
 // Send page url for retriving and parsing access token for facebook and picasa.
 page.sendMessage({
