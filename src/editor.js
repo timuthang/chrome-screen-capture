@@ -151,8 +151,8 @@ Canvas.prototype.blurImage = function(
   var ctx = simulateCanvas.getContext('2d');
   try {
     ctx.drawImage(realCanvas, x, y, width, height, 0, 0, width, height);
-  } catch(error) {
-    console.log(error + ' width : height' + width + ' : ' + height) ;
+  } catch (error) {
+    console.log(error + ', width : height = ' + width + ' : ' + height);
   }
   var imageData = ctx.getImageData(0, 0, width, height);
   imageData = this.boxBlur(imageData, width, height, 10);
@@ -238,5 +238,3 @@ function calculateArrowCoordinates(
 
   return {p1:p2(p1(), 1), p2: p2(p1(), -1) } ;
 }
-
-
