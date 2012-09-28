@@ -306,6 +306,13 @@ var UploadUI = {
     }
     uploadAccountList.innerHTML = template + uploadAccountList.innerHTML;
 
+    $('accountName').addEventListener('click', function(e) {
+      UploadUI.upload(site, userId);
+    });
+    $('accountDelete').addEventListener('click', function(e) {
+      UploadUI.deleteAccountItem(site + '_' + userId);
+    });
+    
     UploadUI.updateShareToOtherAccountText(site);
   },
 

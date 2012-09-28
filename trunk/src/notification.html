@@ -15,36 +15,9 @@
       color: #2A5DB0;
     }
   </style>
+  <script src="notification.js"></script>
 </head>
 <body>
 <div id="tip"></div>
-   <script type="text/javascript">
-      function init() {
-        var bg = chrome.extension.getBackgroundPage();
-        var tipDiv = document.getElementById('tip');
-        var captureStatus = bg.screenshot.captureStatus;
-        if (captureStatus) {
-          tipDiv.innerText = chrome.i18n.getMessage('save_success');
-          var aElement = document.createElement('a');
-          aElement.innerText = chrome.i18n.getMessage('open_save_path');
-          aElement.href = 'javascript:void(0)';
-          aElement.addEventListener('click', function() {
-            bg.plugin.openSavePath(localStorage.savePath);
-          }, false);
-          tipDiv.appendChild(aElement);
-        } else {
-          tipDiv.innerText = chrome.i18n.getMessage('save_fail');
-        }
-        closeWindow();
-      }
-
-      function closeWindow() {
-        window.setTimeout(function() {
-          window.close();
-        }, 10000);
-      }
-      init();
-   </script>
-
 </body>
 </html>

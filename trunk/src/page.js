@@ -737,8 +737,7 @@ var page = {
  /**
   * Fix the selection area position when mouse up
   */
-  onMouseUp: function()
-  {
+  onMouseUp: function() {
     page.isMouseDown = false;
     if (event.button != 2) {
       page.resizing = false;
