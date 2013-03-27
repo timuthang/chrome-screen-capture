@@ -104,6 +104,9 @@ void ScreenCaptureScriptObject::InitHandler() {
 // static
 bool ScreenCaptureScriptObject::SaveFile(
     const char* fileName, const unsigned char* bytes, int byteLength) {
+  if (byteLength < 0) {
+    return false;
+  }
   FILE* out = fopen(fileName, "wb");
   if (out) {
     fwrite(bytes, byteLength, 1, out);
@@ -943,7 +946,7 @@ bool ScreenCaptureScriptObject::SaveScreenshot(
   gint state = 0;
   guint save = 0;
   save_data_length_ = g_base64_decode_step(base64, base64size, save_data_,
-                                         &state, &save);
+                                           &state, &save);
 
   if (!save_dialog_) {
     GtkWidget *dialog = gtk_file_chooser_dialog_new(
