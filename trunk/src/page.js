@@ -241,7 +241,7 @@ var page = {
   },
 
   getOriginalViewPortWidth: function() {
-    chrome.extension.sendRequest({ msg: 'original_view_port_width'},
+    chrome.extension.sendMessage({ msg: 'original_view_port_width'},
       function(originalViewPortWidth) {
         if (originalViewPortWidth) {
           page.originalViewPortWidth = page.hasScrollBar('y') ?
@@ -322,7 +322,7 @@ var page = {
   * Receive messages from background page, and then decide what to do next
   */
   addMessageListener: function() {
-    chrome.extension.onRequest.addListener(function(request, sender, response) {
+    chrome.extension.onMessage.addListener(function(request, sender, response) {
       if (page.isSelectionAreaTurnOn) {
         page.removeSelectionArea();
       }
@@ -353,7 +353,7 @@ var page = {
   * Send Message to background page
   */
   sendMessage: function(message) {
-    chrome.extension.sendRequest(message);
+    chrome.extension.sendMessage(message);
   },
 
   /**
@@ -454,8 +454,8 @@ var page = {
   },
 
   getWindowSize: function() {
-    var docWidth = document.width;
-    var docHeight = document.height;
+    var docWidth = document.body.clientWidth;
+    var docHeight = document.body.clientHeight;
     if (page.isGMailPage()) {
       var frame = document.getElementById('canvas_frame');
       docHeight = frame.contentDocument.height;
@@ -477,8 +477,8 @@ var page = {
         'height': page.endY - page.startY,
         'visibleWidth': document.documentElement.clientWidth,
         'visibleHeight': document.documentElement.clientHeight,
-        'docWidth': document.width,
-        'docHeight': document.height
+        'docWidth': document.body.clientWidth,
+        'docHeight': document.body.clientHeight
       })}, 100);
   },
 
@@ -507,9 +507,9 @@ var page = {
       areaProtector.style.left =  - parseInt(page.marginLeft) + 'px';
     }
     areaProtector.style.width =
-      Math.round((document.width + parseInt(page.marginLeft)) / zoom) + 'px';
+      Math.round((document.body.clientWidth + parseInt(page.marginLeft)) / zoom) + 'px';
     areaProtector.style.height =
-      Math.round((document.height + parseInt(page.marginTop)) / zoom) + 'px';
+      Math.round((document.body.clientHeight + parseInt(page.marginTop)) / zoom) + 'px';
     areaProtector.onclick = function() {
       event.stopPropagation();
       return false;
@@ -649,8 +649,8 @@ var page = {
           var width = 0;
           var height = 0;
           var zoom = page.getZoomLevel();
-          var viewWidth = Math.round(document.width / zoom);
-          var viewHeight = Math.round(document.height / zoom);
+          var viewWidth = Math.round(document.body.clientWidth / zoom);
+          var viewHeight = Math.round(document.body.clientHeight / zoom);
           if (xPosition > viewWidth) {
             xPosition = viewWidth;
           } else if (xPosition < 0) {
@@ -713,7 +713,7 @@ var page = {
         }
         var crop = document.getElementById('sc_drag_crop');
         var cancel = document.getElementById('sc_drag_cancel');
-        if (event.pageY + 25 > document.height) {
+        if (event.pageY + 25 > document.body.clientHeight) {
           crop.style.bottom = 0;
           cancel.style.bottom = 0
         } else {
@@ -860,9 +860,9 @@ var page = {
       return;
     }
     if (isPageCapturable()) {
-      chrome.extension.sendRequest({msg: 'page_capturable'});
+      chrome.extension.sendMessage({msg: 'page_capturable'});
     } else {
-      chrome.extension.sendRequest({msg: 'page_uncapturable'});
+      chrome.extension.sendMessage({msg: 'page_uncapturable'});
     }
     this.injectCssResource('style.css');
     this.addMessageListener();

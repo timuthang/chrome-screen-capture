@@ -19,33 +19,12 @@ function init() {
   i18nReplace('screenshootQualitySetting', 'quality_setting');
   i18nReplace('lossyScreenShot', 'lossy');
   i18nReplace('losslessScreenShot', 'lossless');
-  i18nReplace('autosaveSetting', 'save_setting');
   i18nReplace('shorcutSetting', 'shortcut_setting');
   i18nReplace('settingShortcutText', 'shortcutsetting_text');
-  i18nReplace('defaultPath', 'save_tip');
-  i18nReplace('autosaveText', 'autosave');
-  i18nReplace('setSavePath', 'set_save_path');
-  i18nReplace('openSavePath', 'open_save_path');
   if (isHighVersion()) {
     $('lossyScreenShot').innerText += ' (JPEG)';
     $('losslessScreenShot').innerText += ' (PNG)';
   }
-  $('autosave').checked = eval(localStorage.autoSave);
-  $('filePath').value = localStorage.savePath =
-      localStorage.savePath ?
-          localStorage.savePath : bg.plugin.getDefaultSavePath();
-  $('setSavePath').addEventListener('click', function() {
-    // Here we use the plugin object in options.html instead of the plugin
-    // object in background page, so that the SetSavePath dialog will be a
-    // modal dialog.
-    var pluginobj = $('pluginobj');
-    pluginobj.SetSavePath(localStorage.savePath, function(savePath) {
-      $('filePath').value = localStorage.savePath = savePath;
-    }, chrome.i18n.getMessage('set_save_path_title'));
-  });
-  $('openSavePath').addEventListener('click', function() {
-    bg.plugin.openSavePath(localStorage.savePath);
-  });
   $('saveAndClose').addEventListener('click', saveAndClose);
   initScreenCaptureQuality();
   HotKeySetting.setup();
@@ -55,7 +34,6 @@ function save() {
   localStorage.screenshootQuality =
       $('lossy').checked ? 'jpeg' : '' ||
       $('lossless').checked ? 'png' : '';
-  localStorage.autoSave = $('autosave').checked;
 
   return HotKeySetting.save();
 }
@@ -172,18 +150,6 @@ var HotKeySetting = (function() {
           HotKey.set('area', $('area-capture-hot-key').value);
           HotKey.set('viewport', $('viewport-capture-hot-key').value);
           HotKey.set('fullpage', $('full-page-capture-hot-key').value);
-
-          if (isWindowsOrLinux) {
-            var screenCaptureHotKey = $('screen-capture-hot-key').value;
-            if (bg.plugin.setHotKey(screenCaptureHotKey.charCodeAt(0))) {
-              HotKey.set('screen', screenCaptureHotKey);
-            } else {
-              var i18nKey = 'failed_to_register_hot_key_for_screen_capture';
-              ErrorInfo.show(i18nKey);
-              this.focusScreenCapture();
-              result = false;
-            }
-          }
         } else {
           result = false;
         }

@@ -1,5 +1,5 @@
 function checkScriptLoad() {
-  chrome.extension.onRequest.addListener(function(request, sender, response) {
+  chrome.extension.onMessage.addListener(function(request, sender, response) {
     if (request.msg == 'is_page_capturable') {
       try {
         if (isPageCapturable()) {

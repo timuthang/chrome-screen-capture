@@ -1,6 +1,6 @@
 var HotKey = (function() {
   return {
-    setup: function(plugin) {
+    setup: function() {
       // Default enable hot key for capture.
       if (!localStorage.getItem('hot_key_enabled'))
         localStorage.setItem('hot_key_enabled', true);
@@ -16,8 +16,7 @@ var HotKey = (function() {
         this.set('screen', 'P');
 
       var screenCaptureHotKey = this.get('screen');
-      if (this.isEnabled() &&
-          !plugin.setHotKey(screenCaptureHotKey.charCodeAt(0))) {
+      if (this.isEnabled()) {
         this.set('screen', '@'); // Disable hot key for screen capture.
       }
     },
@@ -46,7 +45,6 @@ var HotKey = (function() {
 
     disable: function(bg) {
       localStorage.setItem('hot_key_enabled', false);
-      bg.plugin.disableScreenCaptureHotKey();
     },
 
     isEnabled: function() {

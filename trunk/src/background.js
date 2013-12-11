@@ -2,54 +2,6 @@
 // source code is governed by a BSD-style license that can be found in the
 // LICENSE file.
 
-var plugin = {
-  pluginObj: document.getElementById('pluginObj'),
-
-  autoSave: function(data, title, path) {
-    return this.pluginObj.AutoSave(data, title, path);
-  },
-
-  openSavePath : function(path) {
-    this.pluginObj.OpenSavePath(path);
-  },
-
-  getDefaultSavePath: function() {
-    return this.pluginObj.GetDefaultSavePath();
-  },
-
-  saveToClipboard: function(data) {
-    return this.pluginObj.SaveToClipboard(data);
-  },
-
-  captureScreen: function() {
-    this.pluginObj.CaptureScreen();
-  },
-
-  setMessage: function() {
-    var ok = chrome.i18n.getMessage('ok');
-    var cancel = chrome.i18n.getMessage('cancel');
-    var tipMessage = chrome.i18n.getMessage('capture_tip');
-    if (this.pluginObj.SetMessage)
-      this.pluginObj.SetMessage(ok, cancel, tipMessage);
-  },
-
-  setHotKey: function(keyCode) {
-    return this.pluginObj.SetHotKey(keyCode);
-  },
-
-  disableScreenCaptureHotKey: function() {
-    return this.pluginObj.DisableHotKey();
-  },
-
-  getViewPortWidth: function() {
-    try {
-      return this.pluginObj.GetViewPortWidth();
-    } catch (e) {
-      return null;
-    }
-  }
-};
-
 var screenshot = {
   tab: 0,
   canvas: document.createElement("canvas"),
@@ -90,7 +42,7 @@ var screenshot = {
   * Receive messages from content_script, and then decide what to do next
   */
   addMessageListener: function() {
-    chrome.extension.onRequest.addListener(function(request, sender, response) {
+    chrome.extension.onMessage.addListener(function(request, sender, response) {
       var obj = request;
       var hotKeyEnabled = HotKey.isEnabled();
       switch (obj.msg) {
@@ -115,9 +67,6 @@ var screenshot = {
             screenshot.captureWebpage();
           }
           break;
-        case 'original_view_port_width':
-          response(plugin.getViewPortWidth());
-          break;
       }
     });
   },
@@ -127,16 +76,12 @@ var screenshot = {
   */
   sendMessage: function(message, callback) {
     chrome.tabs.getSelected(null, function(tab) {
-      chrome.tabs.sendRequest(tab.id, message, callback);
+      chrome.tabs.sendMessage(tab.id, message, callback);
     });
   },
 
   showSelectionArea: function() {
     screenshot.sendMessage({msg: 'show_selection_area'}, null);
-  },
-
-  captureScreen: function() {
-    plugin.captureScreen();
   },
 
   captureWindow: function() {
@@ -334,35 +279,16 @@ var screenshot = {
   },
 
   /**
-  * Autosave the image or post it to 'showimage.html'
+  * Post the image to 'showimage.html'
   */
   postImage: function() {
-    // auto save picture
-    if (eval(localStorage.autoSave)) {
-      var data = screenshot.canvas.toDataURL('image/png');
-      chrome.tabs.getSelected(null, function(tab) {
-        if (plugin.autoSave(data, tab.title, localStorage.savePath)) {
-          screenshot.captureStatus = true;
-        } else {
-          screenshot.captureStatus = false;
-        }
-      });
-      screenshot.showNotification();
-    } else {
-      chrome.tabs.getSelected(null, function(tab) {
-        screenshot.tab = tab;
-      });
-      chrome.tabs.create({'url': 'showimage.html'});
-    }
+    chrome.tabs.getSelected(null, function(tab) {
+      screenshot.tab = tab;
+    });
+    chrome.tabs.create({'url': 'showimage.html'});
     var popup = chrome.extension.getViews({type: 'popup'})[0];
     if (popup)
       popup.close();
-  },
-
-  showNotification: function() {
-    var htmlNotification = webkitNotifications.
-        createHTMLNotification('notification.html');
-    htmlNotification.show();
   },
 
   isThisPlatform: function(operationSystem) {
@@ -385,15 +311,9 @@ var screenshot = {
   },
 
   init: function() {
-    plugin.setMessage();
-    var savePath = plugin.getDefaultSavePath();
-    localStorage.savePath = localStorage.savePath ?
-        localStorage.savePath : savePath;
     localStorage.screenshootQuality = localStorage.screenshootQuality || 'png';
     screenshot.executeScriptsInExistingTabs();
     screenshot.addMessageListener();
-
-    HotKey.setup(plugin);
   }
 };
 
