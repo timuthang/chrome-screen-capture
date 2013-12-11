@@ -28,7 +28,7 @@ var shortcutKey = {
   },
 
   sendMessage: function(message) {
-    chrome.extension.sendRequest(message);
+    chrome.extension.sendMessage(message);
   }
 };
 

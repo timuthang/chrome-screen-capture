@@ -507,76 +507,6 @@ var photoshop = {
     }
   },
 
-  save: function() {
-    photoshop.draw();
-    var formatParam  = localStorage.screenshootQuality || 'png';
-    var dataUrl;
-    if (formatParam == 'jpeg' && isHighVersion())
-      dataUrl = $('canvas').toDataURL('image/jpeg', 0.5);
-    else
-      dataUrl = $('canvas').toDataURL('image/png');
-
-    // Here we use the plugin object in showimage.html 
-    // instead of the plugin object in background page, 
-    // so that the SaveScreenshot dialog will be a modal dialog.
-    var pluginobj = document.getElementById('pluginobj');
-    if (!localStorage.lastSavePath)
-      localStorage.lastSavePath = localStorage.savePath;
-    pluginobj.SaveScreenshot(
-        dataUrl, photoshop.tabTitle, localStorage.lastSavePath,
-        function(result, path) {
-          var message = chrome.i18n.getMessage('save_fail');
-          var messageClass = 'tip_failed';
-          if (result == 0 && path) {
-            var i18nMessage = chrome.i18n.getMessage('saved_to_path');
-            message = i18nMessage + '<a title="' + path +
-                '" onclick="bg.plugin.openSavePath(\'' +
-                path.replace(/\\/g, '/') + '\');">' + path + '</a>';
-            messageClass = 'tip_succeed';
-            localStorage.lastSavePath = path;
-          }
-          if (result != 2)
-            photoshop.showTip(messageClass, message, 5000);
-        },
-        chrome.i18n.getMessage("save_image"));
-    photoshop.finish();
-  },
-
-  copy: function() {
-    photoshop.draw();
-    var formatParam  = localStorage.screenshootQuality || 'png';
-    var dataUrl;
-    if (formatParam == 'jpeg' && isHighVersion())
-      dataUrl = $('canvas').toDataURL('image/jpeg', 0.5);
-    else
-      dataUrl = $('canvas').toDataURL('image/png');
-    var copyFlag = bg.plugin.saveToClipboard(dataUrl);
-    var messageKey = 'tip_copy_failed';
-    var messageClass = 'tip_failed';
-    if (copyFlag) {
-      messageKey = 'tip_copy_succeed';
-      messageClass = 'tip_succeed';
-    }
-    var message = chrome.i18n.getMessage(messageKey);
-    photoshop.showTip(messageClass, message);
-    photoshop.finish();
-  },
-  
-  printImage: function() {
-    photoshop.draw();
-    var formatParam  = localStorage.screenshootQuality || 'png';
-    var dataUrl;
-    if (formatParam == 'jpeg' && isHighVersion())
-      dataUrl = $('canvas').toDataURL('image/jpeg', 0.5);
-    else
-      dataUrl = $('canvas').toDataURL('image/png');
-    var width = $('canvas').width;
-    var height = $('canvas').height;
-    var pluginobj = document.getElementById('pluginobj');
-    pluginobj.PrintImage(dataUrl, photoshop.tabTitle, width, height);
-    photoshop.finish();
-  },
-
   drawLineOnMaskCanvas: function(startX, startY, endX, endY, type, layerId) {
     var ctx = $('mask-canvas').getContext('2d');
     ctx.clearRect(0, 0, $('mask-canvas').width, $('mask-canvas').height);
@@ -725,10 +655,7 @@ var photoshop = {
     photoshop.i18nReplace('tRedact', 'redact');
     photoshop.i18nReplace('redactText', 'solid_black');
     photoshop.i18nReplace('tText', 'text');
-    photoshop.i18nReplace('tCopy', 'copy');
-    photoshop.i18nReplace('tSave', 'save');
     photoshop.i18nReplace('tUpload', 'share');
-    photoshop.i18nReplace('tPrint', 'print');
     photoshop.i18nReplace('tClose', 'close');
     photoshop.i18nReplace('border', 'border');
     photoshop.i18nReplace('rect', 'rect');
@@ -886,23 +813,4 @@ $('canvas').addEventListener(
     'selectstart', function f(e) { return false });
 $('mask-canvas').addEventListener(
     'selectstart', function f(e) { return false });
-$('btnSave').addEventListener('click', photoshop.save);
 $('btnClose').addEventListener('click', photoshop.closeCurrentTab);
-$('btnCopy').addEventListener('click', photoshop.copy);
-$('btnPrint').addEventListener('click', photoshop.printImage);
-
-// Control more tools list showing and hiding.
-(function() {
-  const HIDE_MORE_TOOLS_DELAY = 200;
-  var timer;
-  var moreBtn = $('btnMore');
-  var moreToolsList = $('more-tools');
-  var printBtn = $('btnPrint');
-  var isMac = bg.screenshot.isThisPlatform('mac');
-  var isLinux = bg.screenshot.isThisPlatform('linux');
-  if (isMac) {
-    UI.hide(moreBtn);
-  } else if (isLinux) {
-    UI.hide(printBtn);
-  }
-})();

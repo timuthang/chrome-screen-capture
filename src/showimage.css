@@ -34,6 +34,7 @@ body {
   height: 30px;
   margin-left: 10px;
   padding-top: 6px;
+  z-index: 100;
 }
 .toolbar ul {
   margin: 0px;

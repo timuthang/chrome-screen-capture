@@ -4,7 +4,7 @@
 
 document.addEventListener('DOMContentLoaded', function() {
   var href = window.location.href;
-  chrome.extension.sendRequest({
+  chrome.extension.sendMessage({
       msg: 'url_for_access_token',
       siteId: 'sina',
       url: href

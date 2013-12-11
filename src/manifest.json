@@ -33,16 +33,7 @@
   },
   "manifest_version": 2,
   "options_page": "options.html",
-  "permissions": ["tabs", "http://*/*", "https://*/*", "notifications"],
-  "plugins": [ {
-    "path": "plugin/screen_capture.dll"
-  }, {
-    "path": "plugin/screen_capture.so"
-  }, {
-    "path": "plugin/screen_capture_64.so"
-  }, {
-    "path": "plugin/screen_capture.plugin"
-  } ],
+  "permissions": ["tabs", "http://*/*", "https://*/*"],
   "web_accessible_resources": [
       "page_context.js",
       "style.css"
