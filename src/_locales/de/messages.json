@@ -30,7 +30,7 @@
       "message": "Bildschirmerfassung"
    },
    "description": {
-      "message": "Erfasse den sichtbaren Bereich eines Tabs, einen Bereich einer Webseite oder die gesamte Seite als PNG Bild. Unterstützt horizontales und vertikales scrollen wenn die gesamte Seite erfasst wird, mit der brandneuen Autospeichern-Möglichkeit."
+      "message": "Erfasse den sichtbaren Bereich eines Tabs, einen Bereich einer Webseite oder die gesamte Seite als PNG Bild."
    },
    "edit_tip": {
       "message": "    Unten ist der erfasste Screenshot. Sie können diesen mit den Tools links bearbeiten. Wenn fertig, auf speichern drücken."

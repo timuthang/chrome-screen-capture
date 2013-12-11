@@ -33,7 +33,7 @@
       "message": "Capture \u00e9cran"
    },
    "description": {
-      "message": "Capture le contenu visible de l'onglet, une r\u00e9gion de la page web, ou la page enti\u00e8re en image PNG. Supporte le d\u00e9filement horizontal et vertical lors de la capture de la page enti\u00e8re, avec une nouvelle fonction de sauvegarde automatique."
+      "message": "Capture le contenu visible de l'onglet, une r\u00e9gion de la page web, ou la page enti\u00e8re en image PNG."
    },
    "edit_tip": {
       "message": "Ci-dessous la capture d'\u00e9cran. Vous pouvez l'\u00e9diter avec les outils \u00e0 gauche. Cliquez Enregister quand vous avez termin\u00e9."
