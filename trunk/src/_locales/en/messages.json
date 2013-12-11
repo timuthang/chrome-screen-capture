@@ -1,6 +1,6 @@
 ﻿{
   "name": {"message": "Screen Capture (by Google)"},
-  "description": {"message": "Capture visible content of a tab, a region of a web page, or the whole page as a PNG image. Support horizontal and vertical scroll when capturing whole page, with an all new autosave capability."},
+  "description": {"message": "Capture visible content of a tab, a region of a web page, or the whole page as a PNG image."},
   "default_title": {"message": "Screen Capture"},
   "capture_screen": {"message": "Capture Screen Region"},
   "capture_window": {"message": "Capture Visible Content"},
