@@ -40,7 +40,7 @@
           multipartData.dataList);
       }
 
-      data = constructBlobData(multipartDataString);
+      data = constructBufferData(multipartDataString);
     } else {
       if (queryString)
         url += '?' + queryString;
@@ -113,29 +113,6 @@
     return xhr.responseText;
   }
 
-  function constructBlobData(dataString, contentType) {
-    // Create a BlobBuilder instance to constrct a Blob object
-    var bb;
-    if (window.BlobBuilder) {
-      bb = new BlobBuilder();
-    } else if (window.WebKitBlobBuilder) {
-      bb = new WebKitBlobBuilder();
-    }
-    var len = dataString.length;
-
-    // Create a 8-bit unsigned integer ArrayBuffer view
-    var data = new Uint8Array(len);
-    for (var i = 0; i < len; i++) {
-      data[i] = dataString.charCodeAt(i);
-    }
-
-    // Convert to ArrayBuffer and appended to BlobBuilder
-    bb.append(data.buffer);
-
-    // Return a Blob object from builder
-    return bb.getBlob(contentType);
-  }
-
   /**
    * Construct multipart/form-data formatted data string.
    * @param {Object} binaryData binary data
@@ -166,6 +143,18 @@
 
     data.push('--' + boundary + '--\r\n');
     return data.join('');
+  }
+
+  function constructBufferData(dataString, contentType) {
+      var len = dataString.length;
+
+      // Create a 8-bit unsigned integer ArrayBuffer view
+      var data = new Uint8Array(len);
+      for (var i = 0; i < len; i++) {
+        data[i] = dataString.charCodeAt(i);
+      }
+
+      return data.buffer
   }
 
   function constructMultipartRelatedData(boundary, dataList) {

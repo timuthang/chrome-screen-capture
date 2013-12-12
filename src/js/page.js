@@ -866,7 +866,7 @@ var page = {
     }
     this.injectCssResource('style.css');
     this.addMessageListener();
-    this.injectJavaScriptResource("page_context.js");
+    this.injectJavaScriptResource("js/page_context.js");
 
     // Retrieve original width of view port and cache.
     page.getOriginalViewPortWidth();
@@ -897,7 +897,11 @@ window.addEventListener('resize', function() {
 }, false);
 
 // Send page url for retriving and parsing access token for facebook and picasa.
-page.sendMessage({
+var message = {
   msg: 'url_for_access_token',
   url: window.location.href
-});
+}
+if (window.location.href == 'https://api.weibo.com/oauth2/default.html') {
+  message.siteId = 'sina'
+}
+page.sendMessage(message);

@@ -69,7 +69,6 @@ var HotKeySetting = (function() {
   const CHAR_CODE_OF_A = 65;
   const CHAR_CODE_OF_Z = 90;
   var hotKeySelection = null;
-  var isWindowsOrLinux = isWindowsOrLinuxPlatform();
 
   var hotkey = {
     setup: function() {

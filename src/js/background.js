@@ -301,8 +301,8 @@ var screenshot = {
         chrome.tabs.getAllInWindow(wins[j].id, function(tabs) {
           for (var i = 0; i < tabs.length; ++i) {
             if (tabs[i].url.indexOf("chrome://") != 0) {
-              chrome.tabs.executeScript(tabs[i].id, { file: 'page.js' });
-              chrome.tabs.executeScript(tabs[i].id, { file: 'shortcut.js' });
+              chrome.tabs.executeScript(tabs[i].id, { file: 'js/page.js' });
+              chrome.tabs.executeScript(tabs[i].id, { file: 'js/shortcut.js' });
             }
           }
         });

@@ -8,17 +8,6 @@
 <title>Screen Capture</title>
 <meta charset="UTF-8">
 <link href="showimage.css" rel="stylesheet" type="text/css">
-<script src="editor.js"></script>
-<script src="sha1.js"></script>
-<script src="oauth.js"></script>
-<script src="ajax.js"></script>
-<script src="account.js"></script>
-<script src="ui.js"></script>
-<script src="upload_ui.js"></script>
-<script src="facebook.js"></script>
-<script src="sina_microblog.js"></script>
-<script src="picasa.js"></script>
-<script src="imgur.js"></script>
 </head>
 <body>
   <div id="header">
@@ -160,8 +149,8 @@
             <li id="${accountId}" class="accountItem">
               <span style="display: inline-block;">
                 <span class="account">
-                  <span id="accountName" class="accountName" title="${accountName}">${accountName}</span>
-                  <img id="accountDelete" src="images/delete_account_icon.png" alt="Delete" title="${deletionTitle}">
+                  <span id="accountName" class="accountName" title="${accountName}" data-site="${site}" data-user-id="${userId}">${accountName}</span>
+                  <img id="deleteBtn" class="deleteBtn" src="images/delete_account_icon.png" alt="Delete" title="${deletionTitle}" data-account-id="${accountId}">
                 </span>
               </span>
               <span class="progressBar" style="display: none;" title="${progressInfo}"></span>
@@ -185,6 +174,17 @@
     </div>
   </div>
   <div id="overlay"></div>
-  <script src="showimage.js"></script>
+  <script src="js/editor.js"></script>
+  <script src="js/sha1.js"></script>
+  <script src="js/oauth.js"></script>
+  <script src="js/ajax.js"></script>
+  <script src="js/account.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/upload_ui.js"></script>
+  <script src="js/facebook.js"></script>
+  <script src="js/sina_microblog.js"></script>
+  <script src="js/picasa.js"></script>
+  <script src="js/imgur.js"></script>
+  <script src="js/showimage.js"></script>
 </body>
 </html>

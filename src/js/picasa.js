@@ -82,7 +82,8 @@
         url: ALBUM_URL,
         parameters: {
           fields: 'title,gphoto:nickname,entry/title,entry/gphoto:id',
-          alt: 'json'
+          alt: 'json',
+          access_token: user.accessToken
         },
         success: function(res) {
           var userId = res.feed.title.$t;

@@ -309,7 +309,7 @@ var UploadUI = {
     $('accountName').addEventListener('click', function(e) {
       UploadUI.upload(site, userId);
     });
-    $('accountDelete').addEventListener('click', function(e) {
+    $('deleteBtn').addEventListener('click', function(e) {
       UploadUI.deleteAccountItem(site + '_' + userId);
     });
     
