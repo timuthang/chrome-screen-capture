@@ -814,3 +814,15 @@ $('canvas').addEventListener(
 $('mask-canvas').addEventListener(
     'selectstart', function f(e) { return false });
 $('btnClose').addEventListener('click', photoshop.closeCurrentTab);
+$('uploadAccountList').addEventListener('click', function(e) {
+  var target = e.target;
+  var classList = Array.prototype.slice.call(target.classList)
+  if (classList.indexOf('accountName') >= 0) {
+    var site = target.dataset.site;
+    var userId = target.dataset.userId;
+    UploadUI.upload(site, userId);
+  } else if (classList.indexOf('deleteBtn') >= 0) {
+    var accountId = target.dataset.accountId;
+    UploadUI.deleteAccountItem(accountId);
+  }
+});
