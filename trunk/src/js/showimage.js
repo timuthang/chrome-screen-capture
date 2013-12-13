@@ -56,10 +56,6 @@ var photoshop = {
   },
 
   init: function() {
-    var isMac = bg.screenshot.isThisPlatform('mac');
-    if (isMac) {
-      $('btnCopy').style.display = 'none';
-    }
     photoshop.initTools();
     photoshop.initCanvas();
     photoshop.tabTitle = bg.screenshot.tab.title;

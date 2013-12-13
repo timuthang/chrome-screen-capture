@@ -108,7 +108,7 @@ var SinaMicroblog = {
   },
   
   logout: function(callback) {
-    var params = {source: SINA_APP_KEY};
+    var params = {source: APPKEY};
     ajax({
       url: SINA_LOGOUT_URL,
       parameters: params,

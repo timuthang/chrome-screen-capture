@@ -310,6 +310,7 @@ var UploadUI = {
       UploadUI.upload(site, userId);
     });
     $('deleteBtn').addEventListener('click', function(e) {
+      e.stopPropagation();
       UploadUI.deleteAccountItem(site + '_' + userId);
     });
     
