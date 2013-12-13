@@ -59,11 +59,6 @@ if (CURRENT_LOCALE != 'zh_CN') {
   UI.addStyleSheet('./i18n_styles/en_options.css');
 }
 
-function isWindowsOrLinuxPlatform() {
-  return navigator.userAgent.toLowerCase().indexOf('windows') > -1 ||
-      navigator.userAgent.toLowerCase().indexOf('linux') > -1;
-}
-
 var HotKeySetting = (function() {
   const CHAR_CODE_OF_AT = 64;
   const CHAR_CODE_OF_A = 65;
@@ -106,11 +101,6 @@ var HotKeySetting = (function() {
       }, false);
 
       hotkey.setState(HotKey.isEnabled());
-      if (isWindowsOrLinux) {
-        // Capture screen region is not support on Linux and Mac platform.
-        $('screen-capture-hot-key-set-wrapper').style.display =
-            'inline-block';
-      }
     },
 
     validate: function() {
@@ -125,11 +115,8 @@ var HotKeySetting = (function() {
         validateMap[hotKeySelection[0].value] = true;
         validateMap[hotKeySelection[1].value] = true;
         validateMap[hotKeySelection[2].value] = true;
-        if (isWindowsOrLinux) {
-          validateMap[hotKeySelection[3].value] = true;
-        } else {
-          if (hotKeySelection[3].value != '@')
-            hotKeyLength -= 1;
+        if (hotKeyLength > 3 && hotKeySelection[3].value != '@') {
+          hotKeyLength -= 1;
         }
 
         if (Object.keys(validateMap).length < hotKeyLength) {

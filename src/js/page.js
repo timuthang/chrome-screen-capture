@@ -901,7 +901,7 @@ var message = {
   msg: 'url_for_access_token',
   url: window.location.href
 }
-if (window.location.href == 'https://api.weibo.com/oauth2/default.html') {
+if (window.location.href.indexOf('https://api.weibo.com/oauth2/default.html') == 0) {
   message.siteId = 'sina'
 }
 page.sendMessage(message);
