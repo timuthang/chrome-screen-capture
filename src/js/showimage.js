@@ -503,6 +503,20 @@ var photoshop = {
     }
   },
 
+  save: function() {
+    photoshop.draw();
+    var formatParam  = localStorage.screenshootQuality || 'png';
+    var dataUrl;
+    if (formatParam == 'jpeg' && isHighVersion())
+      dataUrl = $('canvas').toDataURL('image/jpeg', 0.5);
+    else
+      dataUrl = $('canvas').toDataURL('image/png');
+    // Open the dataUrl in another tab. This allows the user to save the image
+    // via normal browser operations.
+    window.open(dataUrl);
+    photoshop.finish();
+  },
+
   drawLineOnMaskCanvas: function(startX, startY, endX, endY, type, layerId) {
     var ctx = $('mask-canvas').getContext('2d');
     ctx.clearRect(0, 0, $('mask-canvas').width, $('mask-canvas').height);
@@ -544,7 +558,7 @@ var photoshop = {
     var div = document.createElement("div");
     div.id = "colorpad";
     element.appendChild(div);
-  
+
     for(var i = 0; i < colorList.length; i++) {
       var a = document.createElement("a");
       var color = colorList[i];
@@ -655,6 +669,7 @@ var photoshop = {
     photoshop.i18nReplace('tClose', 'close');
     photoshop.i18nReplace('border', 'border');
     photoshop.i18nReplace('rect', 'rect');
+    photoshop.i18nReplace('tSave', 'save');
     photoshop.i18nReplace('blurText', 'blur');
     photoshop.i18nReplace('lineText', 'line');
     photoshop.i18nReplace('size_10', 'size_small');
@@ -809,6 +824,7 @@ $('canvas').addEventListener(
     'selectstart', function f(e) { return false });
 $('mask-canvas').addEventListener(
     'selectstart', function f(e) { return false });
+$('btnSave').addEventListener('click', photoshop.save);
 $('btnClose').addEventListener('click', photoshop.closeCurrentTab);
 $('uploadAccountList').addEventListener('click', function(e) {
   var target = e.target;
